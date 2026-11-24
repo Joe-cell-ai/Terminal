@@ -9,7 +9,7 @@ on:
       - "tools/proot/**"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-proot:
