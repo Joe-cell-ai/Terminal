@@ -143,7 +143,7 @@ private fun TerminalPreview(accent: Color) {
                     fontFamily = FontFamily.Monospace, fontSize = 13.sp, lineHeight = 20.sp)
             }
             Spacer(Modifier.height(4.dp))
-            Text("$", color = accent, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+            Text("\\$", color = accent, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
         }
     }
 }
