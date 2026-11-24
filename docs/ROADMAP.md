@@ -29,11 +29,14 @@
 - [ ] Stream package output, progress, cancellation and error handling
 
 ## Batch 5 — files
-- [ ] Debian home file browser
-- [ ] Android Storage Access Framework integration
+- [x] Debian home/rootfs file browser with directory navigation and metadata
+- [x] Android Storage Access Framework import/export without broad storage permission
+- [ ] File create/rename/delete and preview/edit support
 
 ## Batch 6 — developer tools
-- [ ] Optional Python, Git, Node.js, SSH, Nano, Vim installation guidance
+- [x] Optional Python, Git, Node.js, SSH, Nano, Vim and build-essential catalogue
+- [x] Debian APT install command guidance for each tool
+- [ ] One-tap installation and package-state detection after PRoot/APT execution is available
 
 ## Batch 7 — sessions and customization
 - [ ] Multiple terminal sessions
