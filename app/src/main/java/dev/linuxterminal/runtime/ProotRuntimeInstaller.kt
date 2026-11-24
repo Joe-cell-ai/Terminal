@@ -123,13 +123,17 @@ class ProotRuntimeInstaller(context: Context) {
         }
     }
 
-    private fun readText(url: URL): String = connection(url).use { c ->
-        require(c.responseCode in 200..299) { "Runtime checksum request failed: HTTP ${c.responseCode}" }
-        c.inputStream.bufferedReader().use { it.readText() }
+    private fun readText(url: URL): String {
+        val c = connection(url)
+        try {
+            require(c.responseCode in 200..299) { "Runtime checksum request failed: HTTP ${c.responseCode}" }
+            return c.inputStream.bufferedReader().use { it.readText() }
+        } finally { c.disconnect() }
     }
 
     private fun download(url: URL, progress: (Long, Long) -> Unit) {
-        connection(url).use { c ->
+        val c = connection(url)
+        try {
             require(c.responseCode in 200..299) { "Runtime download failed: HTTP ${c.responseCode}" }
             FileOutputStream(archive).use { out ->
                 c.inputStream.use { input ->
@@ -143,7 +147,7 @@ class ProotRuntimeInstaller(context: Context) {
                 }
             }
             require(archive.length() > 0) { "Downloaded runtime archive is empty." }
-        }
+        } finally { c.disconnect() }
     }
 
     private fun connection(url: URL): HttpURLConnection = (url.openConnection() as HttpURLConnection).apply {
