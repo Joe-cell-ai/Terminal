@@ -60,7 +60,10 @@ private fun TerminalApp() {
     val installViewModel: DebianInstallViewModel = viewModel()
     val installProgress by installViewModel.progress.collectAsState()
     val installing by installViewModel.busy.collectAsState()
-    val installError by installViewModel.error.collectAsState()\n    val runtimeProgress by installViewModel.runtimeProgress.collectAsState()\n    val runtimeBusy by installViewModel.runtimeBusy.collectAsState()\n    val runtimeError by installViewModel.runtimeError.collectAsState()
+    val installError by installViewModel.error.collectAsState()
+    val runtimeProgress by installViewModel.runtimeProgress.collectAsState()
+    val runtimeBusy by installViewModel.runtimeBusy.collectAsState()
+    val runtimeError by installViewModel.runtimeError.collectAsState()
     val background = if (classic) TerminalBlack else Color(0xFF101522)
     val accent = if (classic) TerminalGreen else Color(0xFF83B7FF)
 
