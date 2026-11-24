@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -33,6 +34,7 @@ import dev.linuxterminal.runtime.InteractiveTerminalScreen
 import dev.linuxterminal.packages.PackageManagerScreen
 import dev.linuxterminal.files.DebianFileManagerScreen
 import dev.linuxterminal.tools.DeveloperToolsScreen
+import dev.linuxterminal.tools.TerminalExtrasScreen
 
 private val TerminalBlack = Color(0xFF080B08)
 private val TerminalGreen = Color(0xFF55E879)
@@ -40,7 +42,7 @@ private val Panel = Color(0xFF111711)
 private val Muted = Color(0xFF9AA69A)
 
 private enum class Destination(val label: String) {
-    Home("Home"), Terminal("Terminal"), Files("Files"), Packages("Packages"), Tools("Tools"), Settings("Settings")
+    Home("Home"), Terminal("Terminal"), Files("Files"), Packages("Packages"), Tools("Tools"), Extras("More"), Settings("Settings")
 }
 
 class MainActivity : ComponentActivity() {
@@ -61,6 +63,7 @@ private fun TerminalApp() {
     var startupCommand by remember { mutableStateOf(preferences.getString("startup_command", "") ?: "") }
     var sessionCount by rememberSaveable { mutableIntStateOf(1) }
     var selectedSession by rememberSaveable { mutableIntStateOf(0) }
+    var splitTerminal by rememberSaveable { mutableStateOf(false) }
     val installViewModel: DebianInstallViewModel = viewModel()
     val installProgress by installViewModel.progress.collectAsState()
     val installing by installViewModel.busy.collectAsState()
@@ -85,6 +88,7 @@ private fun TerminalApp() {
                         Destination.Files to Icons.Filled.Folder,
                         Destination.Packages to Icons.Filled.Inventory2,
                         Destination.Tools to Icons.Filled.Build,
+                        Destination.Extras to Icons.Filled.History,
                         Destination.Settings to Icons.Filled.Settings
                     )
                     destinations.forEach { (destination, icon) ->
@@ -104,14 +108,21 @@ private fun TerminalApp() {
             }
         ) { padding ->
             Box(Modifier.fillMaxSize().padding(padding)) {
-                InteractiveTerminalScreen(
-                    fontSize = fontSize,
-                    scrollback = scrollback,
-                    sessionKey = selectedSession,
-                    startupCommand = startupCommand,
-                    modifier = if (selected == Destination.Terminal) Modifier.fillMaxSize()
-                        else Modifier.size(1.dp).offset(x = 2000.dp)
-                )
+                if (selected == Destination.Terminal && splitTerminal) {
+                    Row(Modifier.fillMaxSize()) {
+                        InteractiveTerminalScreen(fontSize, scrollback, 0, startupCommand, Modifier.weight(1f))
+                        InteractiveTerminalScreen(fontSize, scrollback, 1, "", Modifier.weight(1f))
+                    }
+                } else {
+                    InteractiveTerminalScreen(
+                        fontSize = fontSize,
+                        scrollback = scrollback,
+                        sessionKey = selectedSession,
+                        startupCommand = startupCommand,
+                        modifier = if (selected == Destination.Terminal) Modifier.fillMaxSize()
+                            else Modifier.size(1.dp).offset(x = 2000.dp)
+                    )
+                }
                 when (selected) {
                     Destination.Home -> HomeScreen(
                         accent = accent,
