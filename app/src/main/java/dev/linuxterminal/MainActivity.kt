@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Inventory2
@@ -25,6 +26,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.linuxterminal.runtime.DebianInstallViewModel
 import dev.linuxterminal.runtime.InteractiveTerminalScreen
 import dev.linuxterminal.packages.PackageManagerScreen
+import dev.linuxterminal.files.DebianFileManagerScreen
+import dev.linuxterminal.tools.DeveloperToolsScreen
 
 private val TerminalBlack = Color(0xFF080B08)
 private val TerminalGreen = Color(0xFF55E879)
@@ -32,7 +35,7 @@ private val Panel = Color(0xFF111711)
 private val Muted = Color(0xFF9AA69A)
 
 private enum class Destination(val label: String) {
-    Home("Home"), Terminal("Terminal"), Files("Files"), Packages("Packages"), Settings("Settings")
+    Home("Home"), Terminal("Terminal"), Files("Files"), Packages("Packages"), Tools("Tools"), Settings("Settings")
 }
 
 class MainActivity : ComponentActivity() {
@@ -66,6 +69,7 @@ private fun TerminalApp() {
                         Destination.Terminal to Icons.Filled.Code,
                         Destination.Files to Icons.Filled.Folder,
                         Destination.Packages to Icons.Filled.Inventory2,
+                        Destination.Tools to Icons.Filled.Build,
                         Destination.Settings to Icons.Filled.Settings
                     )
                     destinations.forEach { (destination, icon) ->
@@ -97,8 +101,9 @@ private fun TerminalApp() {
                         openTerminal = { selected = Destination.Terminal }
                     )
                     Destination.Terminal -> InteractiveTerminalScreen()
-                    Destination.Files -> PlaceholderScreen("File manager", "Browse the Debian home directory and shared Android files.")
+                    Destination.Files -> DebianFileManagerScreen()
                     Destination.Packages -> PackageManagerScreen()
+                    Destination.Tools -> DeveloperToolsScreen()
                     Destination.Settings -> SettingsScreen(classic, { classic = it })
                 }
             }
