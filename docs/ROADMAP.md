@@ -13,12 +13,14 @@
 - [x] SHA-256 verification against the image's published checksum
 - [x] Path-checked extraction into app-private storage
 - [x] Free-storage preflight and installed-state restoration
-- [x] PRoot ARM64 runtime installer with checksum verification, guarded extraction and atomic activation\n- [ ] End-to-end first Debian Bash launch on physical ARM64 device
+- [x] PRoot ARM64 runtime installer with checksum verification, guarded extraction and atomic activation
+- [ ] End-to-end first Debian Bash launch on physical ARM64 device
 
 ## Batch 3 — real terminal
 - [x] PTY-backed interactive session integrated with the Termux terminal engine
 - [x] ANSI parsing, cursor handling, terminal resize and scrollback provided by the terminal engine
-- [x] PTY launch wired to the installed ARM64 PRoot runtime with honest host-shell fallback\n- [ ] Confirm interactive Debian Bash on physical ARM64 device
+- [x] PTY launch wired to the installed ARM64 PRoot runtime with honest host-shell fallback
+- [ ] Confirm interactive Debian Bash on physical ARM64 device
 - [ ] Fira Code font asset and ligature-enabled rendering
 - [ ] Dedicated extra-key row and terminal input ergonomics
 
@@ -37,7 +39,8 @@
 ## Batch 6 — developer tools
 - [x] Optional Python, Git, Node.js, SSH, Nano, Vim and build-essential catalogue
 - [x] Debian APT install command guidance for each tool
-- [x] One-tap developer package installation through Debian APT\n- [ ] Installed package-state detection
+- [x] One-tap developer package installation through Debian APT
+- [ ] Installed package-state detection
 
 ## Batch 7 — sessions and customization
 - [x] Up to four independent in-memory PTY sessions while the Terminal screen remains open
