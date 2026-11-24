@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -21,7 +23,6 @@ import dev.linuxterminal.files.DebianFileManagerScreen
 import dev.linuxterminal.packages.PackageManagerScreen
 import dev.linuxterminal.tools.DeveloperToolsScreen
 import dev.linuxterminal.tools.TerminalExtrasScreen
-import dev.linuxterminal.runtime.DebianInstaller
 
 @Composable
 fun ToolsHubScreen(
@@ -42,6 +43,14 @@ fun ToolsHubScreen(
 ) {
     var selected by remember { mutableIntStateOf(0) }
     val tabs = listOf("Setup", "Packages", "Tools", "File Explorer", "Utilities")
+    MaterialTheme(colorScheme = darkColorScheme(
+        primary = Color.White,
+        onPrimary = Color.Black,
+        background = Color.Black,
+        surface = Color(0xFF101010),
+        onSurface = Color.White,
+        onBackground = Color.White
+    )) {
     Column(Modifier.fillMaxSize()) {
         Text("Workspace", modifier = Modifier.padding(start = 18.dp, top = 12.dp, bottom = 8.dp),
             style = MaterialTheme.typography.headlineSmall)
@@ -61,6 +70,7 @@ fun ToolsHubScreen(
             3 -> DebianFileManagerScreen()
             else -> TerminalExtrasScreen()
         }
+    }
     }
 }
 
