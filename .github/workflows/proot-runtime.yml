@@ -76,6 +76,16 @@ jobs:
           sha256sum dist/proot-runtime-aarch64.tar.gz > dist/proot-runtime-aarch64.tar.gz.sha256
           tar -tzf dist/proot-runtime-aarch64.tar.gz
 
+      - name: Publish versioned runtime release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if ! gh release view proot-runtime >/dev/null 2>&1; then
+            gh release create proot-runtime --title "PRoot ARM64 runtime" --notes "Separately downloadable ARM64 PRoot runtime for Terminal. Built from the pinned official Termux package recipe."
+          fi
+          gh release upload proot-runtime dist/proot-runtime-aarch64.tar.gz dist/proot-runtime-aarch64.tar.gz.sha256 --clobber
+
       - name: Upload ARM64 PRoot runtime artifact
         uses: actions/upload-artifact@v4
         with:
