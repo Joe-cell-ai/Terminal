@@ -105,7 +105,13 @@ private fun TerminalApp() {
                         installed = installProgress.installed,
                         installing = installing,
                         error = installError,
+                        runtimeMessage = runtimeProgress.message,
+                        runtimePercent = runtimeProgress.percent,
+                        runtimeInstalled = runtimeProgress.installed,
+                        runtimeBusy = runtimeBusy,
+                        runtimeError = runtimeError,
                         onInstall = { installViewModel.install() },
+                        onInstallRuntime = { installViewModel.installRuntime() },
                         openTerminal = { selected = Destination.Terminal }
                     )
                     Destination.Terminal -> Column(Modifier.fillMaxSize()) {
