@@ -146,26 +146,49 @@ class DebianInstaller(context: Context) {
         TarArchiveInputStream(XZCompressorInputStream(BufferedInputStream(FileInputStream(file)))).use { tar ->
             var entry = tar.nextTarEntry
             val buffer = ByteArray(64 * 1024)
+            var entryCount = 0
+            var expandedBytes = 0L
             while (entry != null) {
-                val name = entry.name.removePrefix("./").trimStart('/')
+                entryCount += 1
+                require(entryCount <= 500_000) { "Debian archive contains too many entries." }
+
+                // Never reinterpret an absolute archive path as a relative one.
+                val rawName = entry.name
+                require(!rawName.startsWith("/") && !rawName.split('/').contains("..")) {
+                    "Unsafe path found in Debian archive."
+                }
+                val name = rawName.removePrefix("./").trimEnd('/')
                 require(name.isNotBlank()) { "Invalid empty path in Debian archive." }
                 val target = File(destination, name).canonicalFile
-                require(target.toPath().startsWith(canonicalRoot)) { "Unsafe path found in Debian archive." }
+                require(target.toPath().startsWith(canonicalRoot) && target.toPath() != canonicalRoot) {
+                    "Unsafe path found in Debian archive."
+                }
 
                 when {
                     entry.isDirectory -> {
-                        target.mkdirs()
+                        require(target.mkdirs() || target.isDirectory) { "Could not create Debian directory: $name" }
                     }
                     entry.isSymbolicLink -> {
                         val link = File(entry.linkName)
-                        val resolved = if (link.isAbsolute) link.toPath().normalize()
-                            else target.parentFile.toPath().resolve(link.toPath()).normalize()
+                        require(!link.isAbsolute && !entry.linkName.split('/').contains("..")) {
+                            "Unsafe symbolic link in Debian archive."
+                        }
+                        val resolved = target.parentFile.toPath().resolve(link.toPath()).normalize()
                         require(resolved.startsWith(canonicalRoot)) { "Unsafe symbolic link in Debian archive." }
                         target.parentFile?.mkdirs()
-                        if (!target.exists()) java.nio.file.Files.createSymbolicLink(target.toPath(), link.toPath())
+                        require(!java.nio.file.Files.exists(target.toPath(), java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
+                            "Duplicate archive entry: $name"
+                        }
+                        java.nio.file.Files.createSymbolicLink(target.toPath(), link.toPath())
                     }
                     entry.isFile -> {
+                        require(entry.size >= 0 && entry.size <= 2_000_000_000L) { "Invalid file size in Debian archive." }
+                        expandedBytes += entry.size
+                        require(expandedBytes <= 8_000_000_000L) { "Debian archive expands beyond the 8 GB safety limit." }
                         target.parentFile?.mkdirs()
+                        require(!java.nio.file.Files.exists(target.toPath(), java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
+                            "Duplicate archive entry: $name"
+                        }
                         FileOutputStream(target).use { output ->
                             var count: Int
                             while (tar.read(buffer).also { count = it } != -1) output.write(buffer, 0, count)
@@ -174,7 +197,7 @@ class DebianInstaller(context: Context) {
                         target.setReadable((entry.mode and 0b100100100) != 0, false)
                         target.setWritable((entry.mode and 0b010010010) != 0, false)
                     }
-                    else -> error("Unsupported special file in Debian archive: $name")
+                    else -> error("Unsupported special or hard-link entry in Debian archive: $name")
                 }
                 entry = tar.nextTarEntry
             }
