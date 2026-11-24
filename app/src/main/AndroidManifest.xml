@@ -4,6 +4,7 @@
     <application
         android:allowBackup="false"
         android:label="Terminal"
+        android:icon="@drawable/ic_terminal"
         android:theme="@android:style/Theme.Material.NoActionBar"
         android:supportsRtl="true">
         <activity
