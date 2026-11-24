@@ -1,0 +1,77 @@
+name: Build ARM64 PRoot runtime
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/proot-runtime.yml"
+      - "tools/proot/**"
+
+permissions:
+  contents: read
+
+jobs:
+  build-proot:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout app repository
+        uses: actions/checkout@v4
+
+      - name: Checkout official Termux package recipes
+        uses: actions/checkout@v4
+        with:
+          repository: termux/termux-packages
+          path: termux-packages
+
+      - name: Build official ARM64 PRoot package and dependencies
+        working-directory: termux-packages
+        env:
+          TERMUX_ARCH: aarch64
+          CI: "true"
+        run: |
+          set -euo pipefail
+          ./scripts/run-docker.sh ./build-package.sh -a aarch64 proot
+
+      - name: Assemble runtime bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist/proot-runtime/root
+          shopt -s nullglob
+          debs=(termux-packages/output/*.deb)
+          if (( ${#debs[@]} == 0 )); then
+            echo "Termux build produced no Debian packages" >&2
+            exit 1
+          fi
+          for deb in "${debs[@]}"; do
+            dpkg-deb -x "$deb" dist/proot-runtime/root
+          done
+          find dist/proot-runtime/root -type f -name proot -print -quit | grep -q .
+          mkdir -p dist/proot-runtime/lib dist/proot-runtime/libexec
+          if [[ -d dist/proot-runtime/root/data/data/com.termux/files/usr/lib ]]; then
+            cp -a dist/proot-runtime/root/data/data/com.termux/files/usr/lib/. dist/proot-runtime/lib/
+          fi
+          if [[ -d dist/proot-runtime/root/data/data/com.termux/files/usr/libexec ]]; then
+            cp -a dist/proot-runtime/root/data/data/com.termux/files/usr/libexec/. dist/proot-runtime/libexec/
+          fi
+          PROOT_BIN="$(find dist/proot-runtime/root -type f -name proot -print -quit)"
+          install -m 755 "$PROOT_BIN" dist/proot-runtime/proot
+          rm -rf dist/proot-runtime/root
+          printf '%s\n' "Built from official termux/termux-packages proot recipe." > dist/proot-runtime/BUILD-INFO.txt
+          sha256sum dist/proot-runtime/proot > dist/proot-runtime/SHA256SUMS
+          tar -C dist -czf proot-runtime-aarch64.tar.gz proot-runtime
+          sha256sum dist/proot-runtime-aarch64.tar.gz > dist/proot-runtime-aarch64.tar.gz.sha256
+          tar -tzf dist/proot-runtime-aarch64.tar.gz
+
+      - name: Upload ARM64 PRoot runtime artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: proot-runtime-aarch64
+          path: |
+            dist/proot-runtime-aarch64.tar.gz
+            dist/proot-runtime-aarch64.tar.gz.sha256
+            dist/proot-runtime/SHA256SUMS
+            dist/proot-runtime/BUILD-INFO.txt
+          if-no-files-found: error
+          retention-days: 30
