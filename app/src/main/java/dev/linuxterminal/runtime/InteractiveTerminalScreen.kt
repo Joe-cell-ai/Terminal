@@ -93,7 +93,7 @@ private class AppViewClient : TerminalViewClient {
  * are present. Otherwise, the UI clearly labels the Android host-shell fallback.
  */
 @Composable
-fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, sessionKey: Int = 0) {
+fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, sessionKey: Int = 0, startupCommand: String = "") {
     val context = LocalContext.current
     val sessionClient = remember(context) { AppSessionClient(context) }
     val viewClient = remember { AppViewClient() }
@@ -123,7 +123,12 @@ fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, ses
                 command.environment,
                 scrollback,
                 sessionClient
-            )
+            ).also { newSession ->
+                if (startupCommand.isNotBlank()) {
+                    val startup = (startupCommand.trim() + "\n").toByteArray(Charsets.UTF_8)
+                    newSession.write(startup, 0, startup.size)
+                }
+            }
         }
     }
 
