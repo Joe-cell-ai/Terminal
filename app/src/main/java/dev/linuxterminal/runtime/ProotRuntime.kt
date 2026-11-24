@@ -28,7 +28,13 @@ class ProotRuntime(context: Context) {
 
     fun resolve(): TerminalLaunch? {
         if (!rootfs.isDirectory || !File(rootfs, "etc/debian_version").isFile) return null
+        if (!File(rootfs, "root").isDirectory ||
+            !File(rootfs, "usr/bin/env").isFile ||
+            !File(rootfs, "bin/bash").isFile) return null
         if (!proot.isFile || !proot.canExecute() || !isAarch64Elf(proot)) return null
+        if (!File(runtimeDirectory, "libexec/proot/loader").isFile ||
+            !File(runtimeDirectory, "lib/libtalloc.so.2.5.0").isFile ||
+            !File(runtimeDirectory, "lib/libandroid-shmem.so").isFile) return null
         if (!proot.toPath().startsWith(runtimeDirectory.toPath())) return null
 
         val args = mutableListOf(
