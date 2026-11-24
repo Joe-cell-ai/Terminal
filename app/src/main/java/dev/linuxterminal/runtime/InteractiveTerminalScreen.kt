@@ -105,7 +105,7 @@ fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, ses
     // Switching tabs therefore preserves each shell's working directory and variables.
     val sessions = remember(context) { mutableMapOf<Int, TerminalSession>() }
     val launch = remember(context) { ProotRuntime(context).resolve() }
-    val session = remember(context, sessionKey, scrollback, launch) {
+    val session = remember(context, sessionKey, scrollback, launch, promptStyle) {
         sessions.getOrPut(sessionKey) {
             val home = context.filesDir.absolutePath
             val command = launch ?: TerminalLaunch(
@@ -129,18 +129,22 @@ fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, ses
                 sessionClient
             ).also { newSession ->
                 if (launch?.isDebian == true) {
+                    val prompt = when (promptStyle) {
+                        "One-line" -> "\\[\\e[1;34m\\]kali㉿kali\\[\\e[0m\\]:\\[\\e[1;36m\\]\\w\\[\\e[0m\\]\\$ "
+                        "Compact" -> "\\[\\e[1;34m\\]kali\\[\\e[0m\\]:\\[\\e[1;36m\\]\\W\\[\\e[0m\\]\\$ "
+                        else -> "\\n\\[\\e[1;34m\\]kali㉿kali\\[\\e[0m\\]:\\[\\e[1;36m\\]\\w\\[\\e[0m\\]\\$ "
+                    }
                     val kaliSetup = """
                         export TERM=xterm-256color
                         export COLORTERM=truecolor
                         export CLICOLOR=1
                         export LS_COLORS='di=1;34:ln=1;36:ex=1;32:*.zip=1;31:*.gz=1;31:*.tar=1;31:*.xz=1;31:*.7z=1;31:*.deb=1;35:*.pdf=0;35'
                         export GREP_COLORS='ms=01;31:mc=01;31:sl=:cx=:fn=01;36:ln=01;32:bn=01;32:se=36'
-                        export PS1='\\[\\e[1;34m\\]kali㉿kali\\[\\e[0m\\]:\\[\\e[1;36m\\]\\w\\[\\e[0m\\]\\$ '
-                        alias ls='ls --color=auto'
+                         alias ls='ls --color=auto'
                         alias ll='ls -alF --color=auto'
                         alias grep='grep --color=auto'
                         alias ip='ip --color=auto'
-                        """.trimIndent() + "\n"
+                        """.trimIndent() + "\n" + "export PS1='$prompt'\n"
                     val startup = (kaliSetup + if (startupCommand.isNotBlank()) startupCommand.trim() + "\n" else "").toByteArray(Charsets.UTF_8)
                     newSession.write(startup, 0, startup.size)
                 } else if (startupCommand.isNotBlank()) {
