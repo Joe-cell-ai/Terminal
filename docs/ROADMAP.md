@@ -8,10 +8,12 @@
 - [ ] Bundle Fira Code font and wire ligatures into the terminal renderer
 
 ## Batch 2 — Debian runtime
-- [ ] ARM64 Debian rootfs download outside the APK
-- [ ] Download progress, pause/retry, checksum verification
-- [ ] Safe extraction and PRoot bootstrap
-- [ ] First-boot setup and storage checks
+- [x] ARM64 Debian Bookworm rootfs download outside the APK
+- [x] Download progress reporting and retry after failure
+- [x] SHA-256 verification against the image's published checksum
+- [x] Path-checked extraction into app-private storage
+- [x] Free-storage preflight and installed-state restoration
+- [ ] PRoot executable/bootstrap and first shell launch (runtime execution batch)
 
 ## Batch 3 — real terminal
 - [ ] PTY-backed shell process and interactive input
