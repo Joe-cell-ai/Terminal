@@ -97,7 +97,7 @@ private class AppViewClient : TerminalViewClient {
  * are present. Otherwise, the UI clearly labels the Android host-shell fallback.
  */
 @Composable
-fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, sessionKey: Int = 0, startupCommand: String = "", terminalBackground: Color = Color(0xFF1E2229), transparency: Float = 0f, modifier: Modifier = Modifier) {
+fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, sessionKey: Int = 0, startupCommand: String = "", modifier: Modifier = Modifier, terminalBackground: Color = Color(0xFF1E2229), transparency: Float = 0f, promptStyle: String = "Two-line") {
     val context = LocalContext.current
     val sessionClient = remember(context) { AppSessionClient(context) }
     val viewClient = remember { AppViewClient() }
