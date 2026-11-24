@@ -89,8 +89,8 @@ private class AppViewClient : TerminalViewClient {
 }
 
 /**
- * Interactive PTY terminal. Until PRoot is installed, this intentionally starts the app's
- * unprivileged Android host shell, not Debian.
+ * Starts Debian Bash only when an app-private ARM64 PRoot runtime and verified Debian rootfs
+ * are present. Otherwise, the UI clearly labels the Android host-shell fallback.
  */
 @Composable
 fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, sessionKey: Int = 0) {
@@ -100,14 +100,27 @@ fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, ses
     // Keep one PTY per tab while this terminal screen remains in composition.
     // Switching tabs therefore preserves each shell's working directory and variables.
     val sessions = remember(context) { mutableMapOf<Int, TerminalSession>() }
-    val session = remember(context, sessionKey, scrollback) {
+    val launch = remember(context) { ProotRuntime(context).resolve() }
+    val session = remember(context, sessionKey, scrollback, launch) {
         sessions.getOrPut(sessionKey) {
             val home = context.filesDir.absolutePath
+            val command = launch ?: TerminalLaunch(
+                executable = "/system/bin/sh",
+                workingDirectory = home,
+                arguments = arrayOf("-i"),
+                environment = arrayOf(
+                    "HOME=$home",
+                    "TERM=xterm-256color",
+                    "PATH=/system/bin:/system/xbin",
+                    "LANG=C.UTF-8"
+                ),
+                isDebian = false
+            )
             TerminalSession(
-                "/system/bin/sh",
-                home,
-                arrayOf("-i"),
-                arrayOf("HOME=$home", "TERM=xterm-256color", "PATH=/system/bin:/system/xbin", "LANG=C.UTF-8"),
+                command.executable,
+                command.workingDirectory,
+                command.arguments,
+                command.environment,
                 scrollback,
                 sessionClient
             )
@@ -128,9 +141,14 @@ fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, ses
     }
 
     Column(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 8.dp)) {
-        Text("ANDROID HOST SHELL · TAB ${sessionKey + 1}", color = MaterialTheme.colorScheme.primary, fontSize = 11.sp)
         Text(
-            "PRoot is not connected yet; this is not the Debian environment.",
+            (if (launch?.isDebian == true) "DEBIAN BASH" else "ANDROID HOST SHELL") + " · TAB ${sessionKey + 1}",
+            color = MaterialTheme.colorScheme.primary,
+            fontSize = 11.sp
+        )
+        Text(
+            if (launch?.isDebian == true) "Debian Bookworm ARM64 · PRoot" else
+                "Debian shell is unavailable. Install the verified ARM64 PRoot runtime to launch Debian Bash.",
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.65f),
             fontSize = 11.sp,
             modifier = Modifier.padding(bottom = 8.dp, top = 3.dp)
