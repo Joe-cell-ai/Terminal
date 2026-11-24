@@ -5,8 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code
@@ -23,6 +21,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import dev.linuxterminal.runtime.DebianInstallViewModel
 
 private val TerminalBlack = Color(0xFF080B08)
 private val TerminalGreen = Color(0xFF55E879)
@@ -44,6 +44,10 @@ class MainActivity : ComponentActivity() {
 private fun TerminalApp() {
     var selected by remember { mutableStateOf(Destination.Home) }
     var classic by remember { mutableStateOf(true) }
+    val installViewModel: DebianInstallViewModel = viewModel()
+    val installProgress by installViewModel.progress.collectAsState()
+    val installing by installViewModel.busy.collectAsState()
+    val installError by installViewModel.error.collectAsState()
     val background = if (classic) TerminalBlack else Color(0xFF101522)
     val accent = if (classic) TerminalGreen else Color(0xFF83B7FF)
 
@@ -80,8 +84,17 @@ private fun TerminalApp() {
         ) { padding ->
             Box(Modifier.fillMaxSize().padding(padding)) {
                 when (selected) {
-                    Destination.Home -> HomeScreen(accent) { selected = Destination.Terminal }
-                    Destination.Terminal -> TerminalPreview(accent)
+                    Destination.Home -> HomeScreen(
+                        accent = accent,
+                        progressMessage = installProgress.message,
+                        progress = installProgress.percent,
+                        installed = installProgress.installed,
+                        installing = installing,
+                        error = installError,
+                        onInstall = { installViewModel.install() },
+                        openTerminal = { selected = Destination.Terminal }
+                    )
+                    Destination.Terminal -> TerminalPreview(accent, installProgress.installed)
                     Destination.Files -> PlaceholderScreen("File manager", "Browse the Debian home directory and shared Android files.")
                     Destination.Packages -> PlaceholderScreen("Packages", "Install and manage Debian packages with APT.")
                     Destination.Settings -> SettingsScreen(classic, { classic = it })
@@ -92,7 +105,16 @@ private fun TerminalApp() {
 }
 
 @Composable
-private fun HomeScreen(accent: Color, openTerminal: () -> Unit) {
+private fun HomeScreen(
+    accent: Color,
+    progressMessage: String,
+    progress: Int,
+    installed: Boolean,
+    installing: Boolean,
+    error: String?,
+    onInstall: () -> Unit,
+    openTerminal: () -> Unit
+) {
     Column(Modifier.fillMaxSize().padding(22.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         Text("TERMINAL", color = accent, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
         Text("Your Linux workspace.", fontSize = 28.sp, fontWeight = FontWeight.Bold)
@@ -100,15 +122,35 @@ private fun HomeScreen(accent: Color, openTerminal: () -> Unit) {
         Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(18.dp)) {
             Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Debian environment", fontWeight = FontWeight.SemiBold)
-                Text("Not installed yet", color = accent, fontSize = 13.sp)
-                Text("The Debian userspace will be downloaded separately so the app stays lightweight.", color = Muted, fontSize = 13.sp)
-                Button(onClick = openTerminal, colors = ButtonDefaults.buttonColors(containerColor = accent)) {
-                    Text("Open terminal", color = TerminalBlack)
+                Text(if (installed) "Installed · Bookworm ARM64" else "Not installed", color = accent, fontSize = 13.sp)
+                Text("Download is separate from the APK. The installer verifies SHA-256 before extracting into private app storage.", color = Muted, fontSize = 13.sp)
+                if (installing || progress > 0) {
+                    LinearProgressIndicator(
+                        progress = { progress / 100f },
+                        modifier = Modifier.fillMaxWidth(),
+                        color = accent,
+                        trackColor = Color(0xFF263126)
+                    )
+                    Text(progressMessage, color = Muted, fontSize = 12.sp)
                 }
+                if (error != null) {
+                    Text(error, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Button(
+                        onClick = onInstall,
+                        enabled = !installing && !installed,
+                        colors = ButtonDefaults.buttonColors(containerColor = accent)
+                    ) {
+                        Text(if (installed) "Debian installed" else if (installing) "Installing…" else "Install Debian", color = TerminalBlack)
+                    }
+                    OutlinedButton(onClick = openTerminal) { Text("Terminal") }
+                }
+                Text("Requires at least 1.5 GB free internal storage and an internet connection.", color = Muted, fontSize = 11.sp)
             }
         }
         Text("Quick start", fontWeight = FontWeight.SemiBold)
-        listOf("Install Debian userspace", "Open an interactive shell", "Add developer tools with APT").forEachIndexed { index, item ->
+        listOf("Install Debian userspace", "Set up PRoot runtime", "Start an interactive shell").forEachIndexed { index, item ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Surface(color = accent.copy(alpha = .14f), shape = RoundedCornerShape(10.dp)) {
                     Text("${index + 1}", Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = accent)
@@ -120,13 +162,13 @@ private fun HomeScreen(accent: Color, openTerminal: () -> Unit) {
 }
 
 @Composable
-private fun TerminalPreview(accent: Color) {
+private fun TerminalPreview(accent: Color, debianInstalled: Boolean) {
     val lines = listOf(
-        "Terminal 0.1.0 · preview",
-        "Debian ARM64 environment is not installed.",
+        "Terminal 0.2.0 · runtime setup",
+        if (debianInstalled) "Debian Bookworm ARM64 files are installed." else "Debian ARM64 environment is not installed.",
         "",
-        "This screen is a UI preview only.",
-        "The real PTY shell arrives in Batch 3."
+        "PRoot launcher and PTY shell are not connected yet.",
+        "Command execution will be enabled in a later batch."
     )
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
