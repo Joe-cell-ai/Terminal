@@ -10,7 +10,10 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class DebianInstallViewModel(application: Application) : AndroidViewModel(application) {
     private val installer = DebianInstaller(application)
-    private val _progress = MutableStateFlow(DebianInstaller.Progress("Debian is not installed", 0))
+    private val _progress = MutableStateFlow(
+        if (installer.isInstalled()) DebianInstaller.Progress("Debian Bookworm ARM64 installed", 100, true)
+        else DebianInstaller.Progress("Debian is not installed", 0)
+    )
     val progress: StateFlow<DebianInstaller.Progress> = _progress.asStateFlow()
     private val _busy = MutableStateFlow(false)
     val busy: StateFlow<Boolean> = _busy.asStateFlow()
