@@ -39,12 +39,15 @@
 - [ ] One-tap installation and package-state detection after PRoot/APT execution is available
 
 ## Batch 7 — sessions and customization
-- [ ] Multiple terminal sessions
-- [ ] Font size, theme, and scrollback settings
+- [x] Terminal session tab controls (up to four visible slots; independent persistent PTY sessions still need implementation)
+- [x] Persist Classic/Premium theme selection
+- [x] Persist terminal font size and scrollback preferences
 
 ## Batch 8 — reliability and security
-- [ ] Lifecycle/process recovery and storage validation
-- [ ] Runtime isolation and permission review
+- [x] Preserve coroutine cancellation and clean incomplete Debian staging on failure
+- [x] Debian install storage preflight and app-private rootfs storage
+- [ ] Persistent background install recovery and process/session cleanup
+- [ ] Runtime isolation, symlink/archive edge-case review and permission audit
 
 ## Batch 9 — release readiness
 - [ ] Unit/instrumentation tests and ARM64 device testing
