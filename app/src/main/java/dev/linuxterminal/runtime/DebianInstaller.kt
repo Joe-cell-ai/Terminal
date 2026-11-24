@@ -26,8 +26,10 @@ class DebianInstaller(context: Context) {
 
     data class Progress(val message: String, val percent: Int, val installed: Boolean = false)
 
+    fun isInstalled(): Boolean = File(root, "etc/debian_version").isFile
+
     suspend fun install(onProgress: (Progress) -> Unit) = withContext(Dispatchers.IO) {
-        if (File(root, "etc/debian_version").isFile) {
+        if (isInstalled()) {
             onProgress(Progress("Debian is already installed", 100, true))
             return@withContext
         }
