@@ -1,6 +1,7 @@
 package dev.linuxterminal.files
 
 import android.net.Uri
+import androidx.documentfile.provider.DocumentFile
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -68,7 +69,27 @@ fun DebianFileManagerScreen() {
     var name by remember { mutableStateOf("") }
     var editingFile by remember { mutableStateOf<File?>(null) }
     var editorContent by remember { mutableStateOf("") }
+    var externalRoot by remember { mutableStateOf<DocumentFile?>(null) }
+    var externalCurrent by remember { mutableStateOf<DocumentFile?>(null) }
+    var externalEntries by remember { mutableStateOf<List<DocumentFile>>(emptyList()) }
     val scope = rememberCoroutineScope()
+    val externalPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) {
+            runCatching {
+                context.contentResolver.takePersistableUriPermission(
+                    uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                        android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+                val tree = DocumentFile.fromTreeUri(context, uri)
+                if (tree != null && tree.canRead()) {
+                    externalRoot = tree
+                    externalCurrent = tree
+                    externalEntries = tree.listFiles().sortedBy { it.name?.lowercase().orEmpty() }
+                    message = "External storage connected: ${tree.name ?: "Storage"}"
+                } else message = "Android did not grant access to this storage."
+            }.onFailure { message = "Could not open storage: ${it.message}" }
+        }
+    }
 
     fun safeChild(parent: File, childName: String): File {
         require(childName.isNotBlank() && childName != "." && childName != "..") { "Enter a valid name." }
@@ -128,7 +149,13 @@ fun DebianFileManagerScreen() {
         }
     }
 
-    LaunchedEffect(current) { refresh() }
+    LaunchedEffect(current) { if (externalCurrent == null) refresh() }
+    LaunchedEffect(externalCurrent) {
+        externalCurrent?.let { folder ->
+            externalEntries = runCatching { folder.listFiles().sortedBy { it.name?.lowercase().orEmpty() } }
+                .getOrDefault(emptyList())
+        }
+    }
 
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         if (uri != null) scope.launch {
@@ -173,18 +200,28 @@ fun DebianFileManagerScreen() {
 
     Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            IconButton(onClick = { if (current != home) current = current.parentFile ?: home }) {
+            IconButton(onClick = {
+                if (externalCurrent != null) {
+                    val selectedFolder = externalCurrent
+                    externalCurrent = if (selectedFolder == externalRoot) null else selectedFolder?.parentFile
+                } else if (current != root) current = current.parentFile ?: root
+                else current = home
+            }) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "Parent folder")
             }
             Column(Modifier.weight(1f)) {
-                Text("Debian files", style = MaterialTheme.typography.headlineSmall)
-                Text(current.relativeTo(root).path.let { if (it == ".") "/root" else "/$it" },
+                Text(if (externalCurrent != null) "External storage" else "Terminal Data",
+                    style = MaterialTheme.typography.headlineSmall)
+                Text(if (externalCurrent != null) externalCurrent?.name ?: "USB / phone storage"
+                    else current.relativeTo(root).path.let { if (it == ".") "/" else "/$it" },
                     color = MaterialTheme.colorScheme.primary, fontSize = 11.sp, maxLines = 1)
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = { importLauncher.launch(arrayOf("*/*")) }) { Text("Import") }
-            OutlinedButton(onClick = { current = home }) { Text("Home") }
+            OutlinedButton(onClick = { externalCurrent = null; current = root }) { Text("Terminal Data") }
+            OutlinedButton(onClick = { externalPicker.launch(null) }) { Text("Phone / USB") }
+            OutlinedButton(onClick = { externalCurrent = null; current = home }) { Text("Home") }
             IconButton(onClick = { name = ""; editAction = EditAction.CREATE_FILE }) {
                 Icon(Icons.Default.InsertDriveFile, contentDescription = "New file")
             }
@@ -195,7 +232,25 @@ fun DebianFileManagerScreen() {
         Text(message, color = MaterialTheme.colorScheme.onBackground.copy(alpha = .65f), fontSize = 12.sp)
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             modifier = Modifier.weight(1f)) {
-            LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            if (externalCurrent != null) {
+                LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    items(externalEntries, key = { it.uri.toString() }) { document ->
+                        Row(Modifier.fillMaxWidth().clickable {
+                            if (document.isDirectory) externalCurrent = document
+                            else message = "${document.name ?: "File"} · ${document.length()} bytes · external file selected"
+                        }.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(if (document.isDirectory) Icons.Default.Folder else Icons.Default.InsertDriveFile,
+                                contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            Column(Modifier.weight(1f).padding(start = 10.dp)) {
+                                Text(document.name ?: "Unnamed item", maxLines = 1)
+                                Text(if (document.isDirectory) "Folder" else "${document.length()} bytes",
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = .6f), fontSize = 11.sp)
+                            }
+                        }
+                    }
+                    if (externalEntries.isEmpty()) item { Text("This storage folder is empty.", Modifier.padding(16.dp)) }
+                }
+            } else LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 items(entries, key = { it.file.absolutePath }) { entry ->
                     Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically) {
