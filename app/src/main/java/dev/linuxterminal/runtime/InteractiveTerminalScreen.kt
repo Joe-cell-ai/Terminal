@@ -156,7 +156,7 @@ fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, ses
             }
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)) {
-            listOf("ESC" to "\\u001b", "TAB" to "\\t", "CTRL+C" to "\\u0003", "CTRL+D" to "\\u0004", "↑" to "\\u001b[A", "↓" to "\\u001b[B", "←" to "\\u001b[D", "→" to "\\u001b[C").forEach { (label, value) ->
+            listOf("ESC" to "\u001b", "TAB" to "\t", "CTRL+C" to "\u0003", "CTRL+D" to "\u0004", "↑" to "\u001b[A", "↓" to "\u001b[B", "←" to "\u001b[D", "→" to "\u001b[C").forEach { (label, value) ->
                 TextButton(onClick = { sendKey(value) }, modifier = Modifier.weight(1f)) { Text(label, fontSize = 10.sp, maxLines = 1) }
             }
         }
