@@ -93,7 +93,7 @@ private class AppViewClient : TerminalViewClient {
  * are present. Otherwise, the UI clearly labels the Android host-shell fallback.
  */
 @Composable
-fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, sessionKey: Int = 0, startupCommand: String = "") {
+fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, sessionKey: Int = 0, startupCommand: String = "", modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val sessionClient = remember(context) { AppSessionClient(context) }
     val viewClient = remember { AppViewClient() }
@@ -145,7 +145,7 @@ fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, ses
         }
     }
 
-    Column(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 8.dp)) {
+    Column(modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 8.dp)) {
         Text(
             (if (launch?.isDebian == true) "DEBIAN BASH" else "ANDROID HOST SHELL") + " · TAB ${sessionKey + 1}",
             color = MaterialTheme.colorScheme.primary,
