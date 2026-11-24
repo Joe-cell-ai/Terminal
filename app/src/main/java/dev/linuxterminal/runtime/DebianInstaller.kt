@@ -157,8 +157,17 @@ class DebianInstaller(context: Context) {
                 require(!rawName.startsWith("/") && !rawName.split('/').contains("..")) {
                     "Unsafe path found in Debian archive."
                 }
+                // Debian rootfs tarballs commonly contain a top-level "." directory entry.
+                // It represents the extraction root itself, so safely skip it.
+                if (rawName == "." || rawName == "./" || rawName.isBlank()) {
+                    entry = tar.nextTarEntry
+                    continue
+                }
                 val name = rawName.removePrefix("./").trimEnd('/')
-                require(name.isNotBlank()) { "Invalid empty path in Debian archive." }
+                if (name.isBlank() || name == ".") {
+                    entry = tar.nextTarEntry
+                    continue
+                }
                 val target = File(destination, name).canonicalFile
                 require(target.toPath().startsWith(canonicalRoot) && target.toPath() != canonicalRoot) {
                     "Unsafe path found in Debian archive."
