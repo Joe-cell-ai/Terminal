@@ -97,16 +97,21 @@ fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, ses
     val context = LocalContext.current
     val sessionClient = remember(context) { AppSessionClient(context) }
     val viewClient = remember { AppViewClient() }
+    // Keep one PTY per tab while this terminal screen remains in composition.
+    // Switching tabs therefore preserves each shell's working directory and variables.
+    val sessions = remember(context) { mutableMapOf<Int, TerminalSession>() }
     val session = remember(context, sessionKey, scrollback) {
-        val home = context.filesDir.absolutePath
-        TerminalSession(
-            "/system/bin/sh",
-            home,
-            arrayOf("-i"),
-            arrayOf("HOME=$home", "TERM=xterm-256color", "PATH=/system/bin:/system/xbin", "LANG=C.UTF-8"),
-            scrollback,
-            sessionClient
-        )
+        sessions.getOrPut(sessionKey) {
+            val home = context.filesDir.absolutePath
+            TerminalSession(
+                "/system/bin/sh",
+                home,
+                arrayOf("-i"),
+                arrayOf("HOME=$home", "TERM=xterm-256color", "PATH=/system/bin:/system/xbin", "LANG=C.UTF-8"),
+                scrollback,
+                sessionClient
+            )
+        }
     }
 
     fun sendKey(value: String) {
@@ -114,12 +119,16 @@ fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, ses
         session.write(bytes, 0, bytes.size)
     }
 
-    DisposableEffect(session) {
-        onDispose { session.finishIfRunning() }
+    DisposableEffect(context) {
+        onDispose {
+            sessions.values.forEach { it.finishIfRunning() }
+            sessions.clear()
+            sessionClient.terminalView = null
+        }
     }
 
     Column(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 8.dp)) {
-        Text("ANDROID HOST SHELL · UNPRIVILEGED", color = MaterialTheme.colorScheme.primary, fontSize = 11.sp)
+        Text("ANDROID HOST SHELL · TAB ${sessionKey + 1}", color = MaterialTheme.colorScheme.primary, fontSize = 11.sp)
         Text(
             "PRoot is not connected yet; this is not the Debian environment.",
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.65f),
