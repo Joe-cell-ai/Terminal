@@ -31,7 +31,8 @@
 ## Batch 5 — files
 - [x] Debian home/rootfs file browser with directory navigation and metadata
 - [x] Android Storage Access Framework import/export without broad storage permission
-- [ ] File create/rename/delete and preview/edit support
+- [x] File create/rename/delete with path validation and delete confirmation
+- [ ] Bounded text preview/edit support
 
 ## Batch 6 — developer tools
 - [x] Optional Python, Git, Node.js, SSH, Nano, Vim and build-essential catalogue
@@ -39,7 +40,8 @@
 - [ ] One-tap installation and package-state detection after PRoot/APT execution is available
 
 ## Batch 7 — sessions and customization
-- [x] Terminal session tab controls (up to four visible slots; independent persistent PTY sessions still need implementation)
+- [x] Up to four independent in-memory PTY sessions while the Terminal screen remains open
+- [ ] Keep sessions alive across navigation/process recreation and add session rename
 - [x] Persist Classic/Premium theme selection
 - [x] Persist terminal font size and scrollback preferences
 
@@ -47,7 +49,8 @@
 - [x] Preserve coroutine cancellation and clean incomplete Debian staging on failure
 - [x] Debian install storage preflight and app-private rootfs storage
 - [ ] Persistent background install recovery and process/session cleanup
-- [ ] Runtime isolation, symlink/archive edge-case review and permission audit
+- [x] Reject absolute/traversal paths, duplicate entries, hard links and special archive entries; cap archive entries and expanded size
+- [ ] PRoot runtime isolation review and device permission audit
 
 ## Batch 9 — release readiness
 - [ ] Unit/instrumentation tests and ARM64 device testing
