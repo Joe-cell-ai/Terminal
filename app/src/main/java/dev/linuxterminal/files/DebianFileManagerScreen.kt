@@ -65,6 +65,8 @@ fun DebianFileManagerScreen() {
     var editAction by remember { mutableStateOf<EditAction?>(null) }
     var selected by remember { mutableStateOf<File?>(null) }
     var name by remember { mutableStateOf("") }
+    var editingFile by remember { mutableStateOf<File?>(null) }
+    var editorContent by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
 
     fun safeChild(parent: File, childName: String): File {
@@ -198,7 +200,21 @@ fun DebianFileManagerScreen() {
                         verticalAlignment = Alignment.CenterVertically) {
                         Row(Modifier.weight(1f).clickable {
                             if (entry.directory) current = entry.file
-                            else message = "${entry.file.name} · ${entry.file.length()} bytes"
+                            else {
+                                val textExtensions = setOf("txt", "md", "sh", "py", "js", "ts", "json", "xml", "html", "css", "kt", "java", "c", "h", "cpp", "conf", "yaml", "yml", "toml", "ini", "log")
+                                val textFile = entry.file.extension.lowercase() in textExtensions || entry.file.name in setOf(".bashrc", ".profile", ".gitignore")
+                                if (textFile && entry.file.length() <= 512 * 1024) {
+                                    scope.launch {
+                                        val loaded = withContext(Dispatchers.IO) {
+                                            runCatching { entry.file.readText(Charsets.UTF_8) }.getOrNull()
+                                        }
+                                        if (loaded != null) {
+                                            editingFile = entry.file
+                                            editorContent = loaded
+                                        } else message = "Could not read this file as UTF-8 text."
+                                    }
+                                } else message = "${entry.file.name} · ${entry.file.length()} bytes · preview not supported"
+                            }
                         }.padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(if (entry.directory) Icons.Default.Folder else Icons.Default.InsertDriveFile,
                                 contentDescription = null, tint = MaterialTheme.colorScheme.primary)
@@ -228,6 +244,42 @@ fun DebianFileManagerScreen() {
                 }
             }
         }
+    }
+
+    editingFile?.let { file ->
+        AlertDialog(
+            onDismissRequest = { editingFile = null },
+            title = { Text("Edit ${file.name}") },
+            text = {
+                TextField(
+                    value = editorContent,
+                    onValueChange = { editorContent = it },
+                    modifier = Modifier.fillMaxWidth().height(360.dp),
+                    minLines = 12,
+                    maxLines = 18
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    scope.launch {
+                        val result = withContext(Dispatchers.IO) {
+                            runCatching {
+                                val safe = file.canonicalFile
+                                require(safe.toPath().startsWith(root.toPath()) && safe.isFile) { "File is outside Debian storage." }
+                                val temp = File(safe.parentFile, safe.name + ".terminal-tmp")
+                                temp.writeText(editorContent, Charsets.UTF_8)
+                                require(temp.renameTo(safe)) { temp.delete(); "Could not save the file." }
+                                "Saved ${safe.name}"
+                            }.getOrElse { "Save failed: ${it.message}" }
+                        }
+                        message = result
+                        editingFile = null
+                        refresh()
+                    }
+                }) { Text("Save") }
+            },
+            dismissButton = { TextButton(onClick = { editingFile = null }) { Text("Close") } }
+        )
     }
 
     when (editAction) {
