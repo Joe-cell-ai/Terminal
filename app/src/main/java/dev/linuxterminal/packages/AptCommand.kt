@@ -9,7 +9,7 @@ object AptCommand {
 
     fun update(): List<String> = listOf("apt-get", "update")
 
-    fun upgrade(): List<String> = listOf("apt-get", "upgrade")
+    fun upgrade(): List<String> = listOf("apt-get", "upgrade", "-y")
 
     fun install(name: String): List<String> {
         requireValid(name)
