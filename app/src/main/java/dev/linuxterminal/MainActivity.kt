@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import android.content.Context
+import android.app.ActivityManager
+import android.os.StatFs
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.linuxterminal.runtime.DebianInstallViewModel
 import dev.linuxterminal.runtime.InteractiveTerminalScreen
@@ -55,6 +57,7 @@ private fun TerminalApp() {
     var classic by remember { mutableStateOf(preferences.getBoolean("classic_theme", true)) }
     var fontSize by remember { mutableFloatStateOf(preferences.getFloat("font_size", 14f)) }
     var scrollback by remember { mutableIntStateOf(preferences.getInt("scrollback", 2000)) }
+    var startupCommand by remember { mutableStateOf(preferences.getString("startup_command", "") ?: "") }
     var sessionCount by remember { mutableIntStateOf(1) }
     var selectedSession by remember { mutableIntStateOf(0) }
     val installViewModel: DebianInstallViewModel = viewModel()
@@ -153,6 +156,11 @@ private fun TerminalApp() {
                         onScrollbackChange = {
                             scrollback = it
                             preferences.edit().putInt("scrollback", it).apply()
+                        },
+                        startupCommand = startupCommand,
+                        onStartupCommandChange = {
+                            startupCommand = it
+                            preferences.edit().putString("startup_command", it).apply()
                         }
                     )
                 }
@@ -275,8 +283,20 @@ private fun SettingsScreen(
     fontSize: Float,
     onFontSizeChange: (Float) -> Unit,
     scrollback: Int,
-    onScrollbackChange: (Int) -> Unit
+    onScrollbackChange: (Int) -> Unit,
+    startupCommand: String,
+    onStartupCommandChange: (String) -> Unit
 ) {
+    val context = LocalContext.current
+    val storage = remember {
+        val stat = StatFs(context.filesDir.absolutePath)
+        Pair(stat.availableBytes / (1024L * 1024L), stat.totalBytes / (1024L * 1024L))
+    }
+    val memory = remember {
+        val info = ActivityManager.MemoryInfo()
+        (context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).getMemoryInfo(info)
+        info.availMem / (1024L * 1024L)
+    }
     Column(Modifier.fillMaxSize().padding(22.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         Text("Settings", fontSize = 27.sp, fontWeight = FontWeight.Bold)
         Card(colors = CardDefaults.cardColors(containerColor = Panel)) {
@@ -299,6 +319,29 @@ private fun SettingsScreen(
                 Text("Scrollback · $scrollback lines", color = MaterialTheme.colorScheme.primary)
                 Slider(value = scrollback.toFloat(), onValueChange = { onScrollbackChange(it.toInt()) }, valueRange = 500f..10000f, steps = 18)
                 Text("Uses the system monospace font until Fira Code is bundled.", color = Muted, fontSize = 12.sp)
+            }
+        }
+        Card(colors = CardDefaults.cardColors(containerColor = Panel)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Startup command", fontWeight = FontWeight.SemiBold)
+                Text("Optional command sent to each new terminal session after the shell starts.", color = Muted, fontSize = 12.sp)
+                OutlinedTextField(
+                    value = startupCommand,
+                    onValueChange = onStartupCommandChange,
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    label = { Text("Command (optional)") },
+                    placeholder = { Text("e.g. cd /root/projects") }
+                )
+                Text("Only enter commands you trust. Leave empty for a normal shell.", color = Muted, fontSize = 11.sp)
+            }
+        }
+        Card(colors = CardDefaults.cardColors(containerColor = Panel)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                Text("Device resources", fontWeight = FontWeight.SemiBold)
+                Text("Available app storage · ${storage.first} MB / ${storage.second} MB", color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
+                Text("Available system memory · $memory MB", color = Muted, fontSize = 13.sp)
+                Text("Debian rootfs and PRoot runtime stay in private app storage. Remove Debian from Android app storage settings to reclaim its space.", color = Muted, fontSize = 12.sp)
             }
         }
         Text("Runtime", fontWeight = FontWeight.SemiBold)
