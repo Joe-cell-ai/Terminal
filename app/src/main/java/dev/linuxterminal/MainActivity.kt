@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.linuxterminal.runtime.DebianInstallViewModel
 import dev.linuxterminal.runtime.InteractiveTerminalScreen
+import dev.linuxterminal.packages.PackageManagerScreen
 
 private val TerminalBlack = Color(0xFF080B08)
 private val TerminalGreen = Color(0xFF55E879)
@@ -97,7 +98,7 @@ private fun TerminalApp() {
                     )
                     Destination.Terminal -> InteractiveTerminalScreen()
                     Destination.Files -> PlaceholderScreen("File manager", "Browse the Debian home directory and shared Android files.")
-                    Destination.Packages -> PlaceholderScreen("Packages", "Install and manage Debian packages with APT.")
+                    Destination.Packages -> PackageManagerScreen()
                     Destination.Settings -> SettingsScreen(classic, { classic = it })
                 }
             }
