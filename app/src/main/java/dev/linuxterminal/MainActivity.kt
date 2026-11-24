@@ -166,7 +166,13 @@ private fun HomeScreen(
     installed: Boolean,
     installing: Boolean,
     error: String?,
+    runtimeMessage: String,
+    runtimePercent: Int,
+    runtimeInstalled: Boolean,
+    runtimeBusy: Boolean,
+    runtimeError: String?,
     onInstall: () -> Unit,
+    onInstallRuntime: () -> Unit,
     openTerminal: () -> Unit
 ) {
     Column(Modifier.fillMaxSize().padding(22.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
@@ -177,25 +183,15 @@ private fun HomeScreen(
             Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Debian environment", fontWeight = FontWeight.SemiBold)
                 Text(if (installed) "Installed · Bookworm ARM64" else "Not installed", color = accent, fontSize = 13.sp)
-                Text("Download is separate from the APK. The installer verifies SHA-256 before extracting into private app storage.", color = Muted, fontSize = 13.sp)
+                Text("Debian downloads separately from the APK and is checked against its published SHA-256 checksum.", color = Muted, fontSize = 13.sp)
                 if (installing || progress > 0) {
-                    LinearProgressIndicator(
-                        progress = { progress / 100f },
-                        modifier = Modifier.fillMaxWidth(),
-                        color = accent,
-                        trackColor = Color(0xFF263126)
-                    )
+                    LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth(), color = accent)
                     Text(progressMessage, color = Muted, fontSize = 12.sp)
                 }
-                if (error != null) {
-                    Text(error, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
-                }
+                if (error != null) Text(error, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(
-                        onClick = onInstall,
-                        enabled = !installing && !installed,
-                        colors = ButtonDefaults.buttonColors(containerColor = accent)
-                    ) {
+                    Button(onClick = onInstall, enabled = !installing && !installed,
+                        colors = ButtonDefaults.buttonColors(containerColor = accent)) {
                         Text(if (installed) "Debian installed" else if (installing) "Installing…" else "Install Debian", color = TerminalBlack)
                     }
                     OutlinedButton(onClick = openTerminal) { Text("Terminal") }
@@ -203,8 +199,24 @@ private fun HomeScreen(
                 Text("Requires at least 1.5 GB free internal storage and an internet connection.", color = Muted, fontSize = 11.sp)
             }
         }
+        Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(18.dp)) {
+            Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                Text("PRoot ARM64 runtime", fontWeight = FontWeight.SemiBold)
+                Text(if (runtimeInstalled) "Installed · ready for Debian Bash" else "Separate ARM64 runtime", color = accent, fontSize = 13.sp)
+                if (runtimeBusy || runtimePercent > 0) {
+                    LinearProgressIndicator(progress = { runtimePercent / 100f }, modifier = Modifier.fillMaxWidth(), color = accent)
+                    Text(runtimeMessage, color = Muted, fontSize = 12.sp)
+                }
+                if (runtimeError != null) Text(runtimeError, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+                Button(onClick = onInstallRuntime, enabled = !runtimeBusy && !runtimeInstalled,
+                    colors = ButtonDefaults.buttonColors(containerColor = accent)) {
+                    Text(if (runtimeInstalled) "PRoot installed" else if (runtimeBusy) "Installing…" else "Install PRoot runtime", color = TerminalBlack)
+                }
+                Text("The runtime is downloaded separately and is not bundled in the APK.", color = Muted, fontSize = 11.sp)
+            }
+        }
         Text("Quick start", fontWeight = FontWeight.SemiBold)
-        listOf("Install Debian userspace", "Set up PRoot runtime", "Start an interactive shell").forEachIndexed { index, item ->
+        listOf("Install Debian userspace", "Install PRoot runtime", "Start an interactive Debian shell").forEachIndexed { index, item ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Surface(color = accent.copy(alpha = .14f), shape = RoundedCornerShape(10.dp)) {
                     Text("${index + 1}", Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = accent)
