@@ -12,7 +12,7 @@ A lightweight Android terminal app targeting a Debian ARM64 userspace through PR
 - Debian environment status clearly shown as not installed
 - Debian root filesystem is planned as a separate download to keep the APK small
 
-Batch 2 adds an optional Debian Bookworm ARM64 rootfs download with SHA-256 verification and app-private extraction. The terminal currently runs the Android host shell; Debian PRoot execution remains pending. Batch 4's UI and safe command builder are ready, but package operations are not yet executable.
+Batch 2 adds an optional Debian Bookworm ARM64 rootfs download with SHA-256 verification and app-private extraction. The terminal currently runs the Android host shell; Debian PRoot execution remains pending. Batch 4's UI and safe command builder are ready, but package operations are not yet executable. Batch 5 adds Debian home file browsing and Android Storage Access Framework import/export. Batch 6 adds a developer-tools catalogue with Debian APT command references; one-tap installation remains gated on PRoot/APT runtime execution.
 
 ## Build
 
