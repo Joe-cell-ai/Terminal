@@ -24,6 +24,8 @@ class ProotRuntime(context: Context) {
     private val runtimeDirectory = File(appFiles, "runtime").canonicalFile
     private val proot = File(runtimeDirectory, "proot").canonicalFile
 
+    fun isAvailable(): Boolean = resolve() != null
+
     fun resolve(): TerminalLaunch? {
         if (!rootfs.isDirectory || !File(rootfs, "etc/debian_version").isFile) return null
         if (!proot.isFile || !proot.canExecute() || !isAarch64Elf(proot)) return null
