@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -58,8 +59,8 @@ private fun TerminalApp() {
     var fontSize by remember { mutableFloatStateOf(preferences.getFloat("font_size", 14f)) }
     var scrollback by remember { mutableIntStateOf(preferences.getInt("scrollback", 2000)) }
     var startupCommand by remember { mutableStateOf(preferences.getString("startup_command", "") ?: "") }
-    var sessionCount by remember { mutableIntStateOf(1) }
-    var selectedSession by remember { mutableIntStateOf(0) }
+    var sessionCount by rememberSaveable { mutableIntStateOf(1) }
+    var selectedSession by rememberSaveable { mutableIntStateOf(0) }
     val installViewModel: DebianInstallViewModel = viewModel()
     val installProgress by installViewModel.progress.collectAsState()
     val installing by installViewModel.busy.collectAsState()
