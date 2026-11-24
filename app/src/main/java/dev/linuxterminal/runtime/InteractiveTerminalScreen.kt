@@ -10,6 +10,13 @@ import android.view.MotionEvent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.weight
+import androidx.compose.material3.Button
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -91,6 +98,10 @@ fun InteractiveTerminalScreen() {
     val context = LocalContext.current
     val sessionClient = remember(context) { AppSessionClient(context) }
     val viewClient = remember { AppViewClient() }
+    fun sendKey(value: String) {
+        val bytes = value.toByteArray(Charsets.UTF_8)
+        session.write(bytes, 0, bytes.size)
+    }
     val session = remember(context) {
         val home = context.filesDir.absolutePath
         TerminalSession(
@@ -116,7 +127,7 @@ fun InteractiveTerminalScreen() {
             modifier = Modifier.padding(bottom = 8.dp, top = 3.dp)
         )
         AndroidView(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.weight(1f).fillMaxSize(),
             factory = { viewContext ->
                 TerminalView(viewContext).apply {
                     setTerminalViewClient(viewClient)
@@ -135,5 +146,10 @@ fun InteractiveTerminalScreen() {
                 }
             }
         )
+        Row(Modifier.fillMaxSize(), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)) {
+            listOf("ESC" to "\\u001b", "TAB" to "\\t", "CTRL+C" to "\\u0003", "CTRL+D" to "\\u0004", "↑" to "\\u001b[A", "↓" to "\\u001b[B", "←" to "\\u001b[D", "→" to "\\u001b[C").forEach { (label, value) ->
+                TextButton(onClick = { sendKey(value) }, modifier = Modifier.weight(1f)) { Text(label, fontSize = 10.sp, maxLines = 1) }
+            }
+        }
     }
 }
