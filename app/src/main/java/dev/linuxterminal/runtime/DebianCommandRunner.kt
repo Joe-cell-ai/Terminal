@@ -18,7 +18,7 @@ class DebianCommandRunner(context: Context) {
             val command = mutableListOf(launch.executable).apply {
                 addAll(launch.arguments.takeWhile { it != "/usr/bin/env" })
                 addAll(listOf("/usr/bin/env", "-i", "HOME=/root", "USER=root", "LOGNAME=root",
-                    "TERM=xterm-256color", "LANG=C.UTF-8",
+                    "TERM=dumb", "LANG=C.UTF-8", "DEBIAN_FRONTEND=noninteractive", "APT_LISTCHANGES_FRONTEND=none",
                     "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"))
                 addAll(arguments)
             }

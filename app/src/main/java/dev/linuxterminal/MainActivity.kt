@@ -9,11 +9,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -31,10 +28,6 @@ import android.os.StatFs
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.linuxterminal.runtime.DebianInstallViewModel
 import dev.linuxterminal.runtime.InteractiveTerminalScreen
-import dev.linuxterminal.packages.PackageManagerScreen
-import dev.linuxterminal.files.DebianFileManagerScreen
-import dev.linuxterminal.tools.DeveloperToolsScreen
-import dev.linuxterminal.tools.TerminalExtrasScreen
 
 private val TerminalBlack = Color(0xFF080B08)
 private val TerminalGreen = Color(0xFF55E879)
@@ -42,7 +35,7 @@ private val Panel = Color(0xFF111711)
 private val Muted = Color(0xFF9AA69A)
 
 private enum class Destination(val label: String) {
-    Home("Home"), Terminal("Terminal"), Files("Files"), Packages("Packages"), Tools("Tools"), Extras("More"), Settings("Settings")
+    Home("Home"), Terminal("Terminal"), Tools("Tools"), Settings("Settings")
 }
 
 class MainActivity : ComponentActivity() {
@@ -60,6 +53,16 @@ private fun TerminalApp() {
     var classic by remember { mutableStateOf(preferences.getBoolean("classic_theme", true)) }
     var fontSize by remember { mutableFloatStateOf(preferences.getFloat("font_size", 18f)) }
     var scrollback by remember { mutableIntStateOf(preferences.getInt("scrollback", 2000)) }
+    var palette by remember { mutableStateOf(preferences.getString("terminal_palette", "Kali Default") ?: "Kali Default") }
+    var transparency by remember { mutableFloatStateOf(preferences.getFloat("terminal_transparency", 0f)) }
+    var promptStyle by remember { mutableStateOf(preferences.getString("prompt_style", "Two-line") ?: "Two-line") }
+    val terminalBackground = when (palette) {
+        "Matrix" -> Color(0xFF000000)
+        "Dracula" -> Color(0xFF282A36)
+        "Solarized Dark" -> Color(0xFF002B36)
+        "Classic Green" -> Color(0xFF080B08)
+        else -> Color(0xFF1E2229)
+    }
     var startupCommand by remember { mutableStateOf(preferences.getString("startup_command", "") ?: "") }
     var sessionCount by rememberSaveable { mutableIntStateOf(1) }
     var selectedSession by rememberSaveable { mutableIntStateOf(0) }
@@ -85,10 +88,7 @@ private fun TerminalApp() {
                     val destinations = listOf(
                         Destination.Home to Icons.Filled.Home,
                         Destination.Terminal to Icons.Filled.Code,
-                        Destination.Files to Icons.Filled.Folder,
-                        Destination.Packages to Icons.Filled.Inventory2,
                         Destination.Tools to Icons.Filled.Build,
-                        Destination.Extras to Icons.Filled.History,
                         Destination.Settings to Icons.Filled.Settings
                     )
                     destinations.forEach { (destination, icon) ->
@@ -110,8 +110,8 @@ private fun TerminalApp() {
             Box(Modifier.fillMaxSize().padding(padding)) {
                 if (selected == Destination.Terminal && splitTerminal) {
                     Row(Modifier.fillMaxSize()) {
-                        InteractiveTerminalScreen(fontSize, scrollback, 0, startupCommand, Modifier.weight(1f))
-                        InteractiveTerminalScreen(fontSize, scrollback, 1, "", Modifier.weight(1f))
+                        InteractiveTerminalScreen(fontSize, scrollback, 0, startupCommand, Modifier.weight(1f), terminalBackground, transparency, promptStyle)
+                        InteractiveTerminalScreen(fontSize, scrollback, 1, "", Modifier.weight(1f), terminalBackground, transparency, promptStyle)
                     }
                 } else {
                     InteractiveTerminalScreen(
@@ -120,25 +120,16 @@ private fun TerminalApp() {
                         sessionKey = selectedSession,
                         startupCommand = startupCommand,
                         modifier = if (selected == Destination.Terminal) Modifier.fillMaxSize()
-                            else Modifier.size(1.dp).offset(x = 2000.dp)
+                            else Modifier.size(1.dp).offset(x = 2000.dp),
+                        terminalBackground = terminalBackground,
+                        transparency = transparency,
+                        promptStyle = promptStyle
                     )
                 }
                 when (selected) {
-                    Destination.Home -> HomeScreen(
-                        accent = accent,
-                        progressMessage = installProgress.message,
-                        progress = installProgress.percent,
-                        installed = installProgress.installed,
-                        installing = installing,
-                        error = installError,
-                        runtimeMessage = runtimeProgress.message,
-                        runtimePercent = runtimeProgress.percent,
-                        runtimeInstalled = runtimeProgress.installed,
-                        runtimeBusy = runtimeBusy,
-                        runtimeError = runtimeError,
-                        onInstall = { installViewModel.install() },
-                        onInstallRuntime = { installViewModel.installRuntime() },
-                        openTerminal = { selected = Destination.Terminal }
+                    Destination.Home -> HomeLandingScreen(
+                        openTerminal = { selected = Destination.Terminal },
+                        openTools = { selected = Destination.Tools }
                     )
                     Destination.Terminal -> Column(Modifier.fillMaxSize()) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -157,10 +148,22 @@ private fun TerminalApp() {
                             }) { Text("+") }
                         }
                     }
-                    Destination.Files -> DebianFileManagerScreen()
-                    Destination.Packages -> PackageManagerScreen()
-                    Destination.Tools -> DeveloperToolsScreen()
-                    Destination.Extras -> TerminalExtrasScreen()
+                    Destination.Tools -> ToolsHubScreen(
+                        accent = accent,
+                        progressMessage = installProgress.message,
+                        progress = installProgress.percent,
+                        installed = installProgress.installed,
+                        installing = installing,
+                        error = installError,
+                        runtimeMessage = runtimeProgress.message,
+                        runtimePercent = runtimeProgress.percent,
+                        runtimeInstalled = runtimeProgress.installed,
+                        runtimeBusy = runtimeBusy,
+                        runtimeError = runtimeError,
+                        onInstall = { installViewModel.install() },
+                        onInstallRuntime = { installViewModel.installRuntime() },
+                        openTerminal = { selected = Destination.Terminal }
+                    )
                     Destination.Settings -> SettingsScreen(
                         classic = classic,
                         onThemeChange = {
@@ -171,6 +174,21 @@ private fun TerminalApp() {
                         onFontSizeChange = {
                             fontSize = it
                             preferences.edit().putFloat("font_size", it).apply()
+                        },
+                        palette = palette,
+                        onPaletteChange = {
+                            palette = it
+                            preferences.edit().putString("terminal_palette", it).apply()
+                        },
+                        transparency = transparency,
+                        onTransparencyChange = {
+                            transparency = it
+                            preferences.edit().putFloat("terminal_transparency", it).apply()
+                        },
+                        promptStyle = promptStyle,
+                        onPromptStyleChange = {
+                            promptStyle = it
+                            preferences.edit().putString("prompt_style", it).apply()
                         },
                         scrollback = scrollback,
                         onScrollbackChange = {
@@ -190,7 +208,7 @@ private fun TerminalApp() {
 }
 
 @Composable
-private fun HomeScreen(
+fun HomeScreen(
     accent: Color,
     progressMessage: String,
     progress: Int,
@@ -300,6 +318,12 @@ private fun PlaceholderScreen(title: String, description: String) {
 private fun SettingsScreen(
     classic: Boolean,
     onThemeChange: (Boolean) -> Unit,
+    palette: String,
+    onPaletteChange: (String) -> Unit,
+    transparency: Float,
+    onTransparencyChange: (Float) -> Unit,
+    promptStyle: String,
+    onPromptStyleChange: (String) -> Unit,
     fontSize: Float,
     onFontSizeChange: (Float) -> Unit,
     scrollback: Int,
@@ -321,7 +345,29 @@ private fun SettingsScreen(
         Text("Settings", fontSize = 27.sp, fontWeight = FontWeight.Bold)
         Card(colors = CardDefaults.cardColors(containerColor = Panel)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Appearance", fontWeight = FontWeight.SemiBold)
+                Text("Terminal appearance", fontWeight = FontWeight.SemiBold)
+                var paletteMenu by remember { mutableStateOf(false) }
+                var promptMenu by remember { mutableStateOf(false) }
+                Text("Colour scheme", color = Muted, fontSize = 12.sp)
+                Box {
+                    OutlinedButton(onClick = { paletteMenu = true }) { Text(palette) }
+                    DropdownMenu(expanded = paletteMenu, onDismissRequest = { paletteMenu = false }) {
+                        listOf("Kali Default", "Matrix", "Dracula", "Solarized Dark", "Classic Green").forEach { option ->
+                            DropdownMenuItem(text = { Text(option) }, onClick = { onPaletteChange(option); paletteMenu = false })
+                        }
+                    }
+                }
+                Text("Application transparency · ${(transparency * 100).toInt()}%", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                Slider(value = transparency, onValueChange = onTransparencyChange, valueRange = 0f..0.45f)
+                Text("Shell prompt layout", color = Muted, fontSize = 12.sp)
+                Box {
+                    OutlinedButton(onClick = { promptMenu = true }) { Text(promptStyle) }
+                    DropdownMenu(expanded = promptMenu, onDismissRequest = { promptMenu = false }) {
+                        listOf("Two-line", "One-line", "Compact").forEach { option ->
+                            DropdownMenuItem(text = { Text(option) }, onClick = { onPromptStyleChange(option); promptMenu = false })
+                        }
+                    }
+                }
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                     Column(Modifier.weight(1f)) {
                         Text("Classic terminal")
