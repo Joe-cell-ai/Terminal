@@ -149,7 +149,7 @@ class DebianInstaller(context: Context) {
             while (entry != null) {
                 val name = entry.name.removePrefix("./").trimStart('/')
                 require(name.isNotBlank()) { "Invalid empty path in Debian archive." }
-                val target = destination.resolve(name).canonicalFile
+                val target = File(destination, name).canonicalFile
                 require(target.toPath().startsWith(canonicalRoot)) { "Unsafe path found in Debian archive." }
 
                 when {
@@ -159,7 +159,7 @@ class DebianInstaller(context: Context) {
                     entry.isSymbolicLink -> {
                         val link = File(entry.linkName)
                         val resolved = if (link.isAbsolute) link.toPath().normalize()
-                            else target.parentFile.toPath().resolve(link).normalize()
+                            else target.parentFile.toPath().resolve(link.toPath()).normalize()
                         require(resolved.startsWith(canonicalRoot)) { "Unsafe symbolic link in Debian archive." }
                         target.parentFile?.mkdirs()
                         if (!target.exists()) java.nio.file.Files.createSymbolicLink(target.toPath(), link.toPath())
