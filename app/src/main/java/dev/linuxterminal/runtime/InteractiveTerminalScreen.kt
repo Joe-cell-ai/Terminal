@@ -8,6 +8,7 @@ import android.graphics.Typeface
 import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,6 +25,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -94,7 +97,7 @@ private class AppViewClient : TerminalViewClient {
  * are present. Otherwise, the UI clearly labels the Android host-shell fallback.
  */
 @Composable
-fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, sessionKey: Int = 0, startupCommand: String = "", modifier: Modifier = Modifier) {
+fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, sessionKey: Int = 0, startupCommand: String = "", terminalBackground: Color = Color(0xFF1E2229), transparency: Float = 0f, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val sessionClient = remember(context) { AppSessionClient(context) }
     val viewClient = remember { AppViewClient() }
@@ -125,12 +128,26 @@ fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, ses
                 scrollback,
                 sessionClient
             ).also { newSession ->
-                if (startupCommand.isNotBlank()) {
+                if (launch?.isDebian == true) {
+                    val kaliSetup = """
+                        export TERM=xterm-256color
+                        export COLORTERM=truecolor
+                        export CLICOLOR=1
+                        export LS_COLORS='di=1;34:ln=1;36:ex=1;32:*.zip=1;31:*.gz=1;31:*.tar=1;31:*.xz=1;31:*.7z=1;31:*.deb=1;35:*.pdf=0;35'
+                        export GREP_COLORS='ms=01;31:mc=01;31:sl=:cx=:fn=01;36:ln=01;32:bn=01;32:se=36'
+                        export PS1='\\[\\e[1;34m\\]kali㉿kali\\[\\e[0m\\]:\\[\\e[1;36m\\]\\w\\[\\e[0m\\]\\$ '
+                        alias ls='ls --color=auto'
+                        alias ll='ls -alF --color=auto'
+                        alias grep='grep --color=auto'
+                        alias ip='ip --color=auto'
+                        """.trimIndent() + "\n"
+                    val startup = (kaliSetup + if (startupCommand.isNotBlank()) startupCommand.trim() + "\n" else "").toByteArray(Charsets.UTF_8)
+                    newSession.write(startup, 0, startup.size)
+                } else if (startupCommand.isNotBlank()) {
                     val startup = (startupCommand.trim() + "\n").toByteArray(Charsets.UTF_8)
                     newSession.write(startup, 0, startup.size)
                 }
-            }
-        }
+            }        }
     }
 
     fun sendKey(value: String) {
@@ -146,7 +163,9 @@ fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, ses
         }
     }
 
-    Column(modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 8.dp)) {
+    val alpha = 1f - transparency.coerceIn(0f, 0.75f)
+    val terminalBg = terminalBackground.copy(alpha = alpha)
+    Column(modifier.fillMaxSize().background(terminalBg).padding(horizontal = 12.dp, vertical = 8.dp)) {
         Text(
             (if (launch?.isDebian == true) "DEBIAN BASH" else "ANDROID HOST SHELL") + " · TAB ${sessionKey + 1}",
             color = MaterialTheme.colorScheme.primary,
@@ -160,7 +179,7 @@ fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, ses
             modifier = Modifier.padding(bottom = 8.dp, top = 3.dp)
         )
         AndroidView(
-            modifier = Modifier.weight(1f).fillMaxSize(),
+            modifier = Modifier.weight(1f).fillMaxSize().background(terminalBg),
             factory = { viewContext ->
                 TerminalView(viewContext, null).apply {
                     setTerminalViewClient(viewClient)
@@ -168,6 +187,7 @@ fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, ses
                     isFocusableInTouchMode = true
                     setTextSize(fontSize.toInt())
                     setTypeface(Typeface.MONOSPACE)
+                    setBackgroundColor(android.graphics.Color.argb((alpha * 255).toInt(), android.graphics.Color.red(terminalBackground.toArgb()), android.graphics.Color.green(terminalBackground.toArgb()), android.graphics.Color.blue(terminalBackground.toArgb())))
                     setTerminalCursorBlinkerRate(600)
                     sessionClient.terminalView = this
                     attachSession(session)
@@ -176,6 +196,7 @@ fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, ses
             },
             update = { view ->
                 view.setTextSize(fontSize.toInt())
+                view.setBackgroundColor(android.graphics.Color.argb((alpha * 255).toInt(), android.graphics.Color.red(terminalBackground.toArgb()), android.graphics.Color.green(terminalBackground.toArgb()), android.graphics.Color.blue(terminalBackground.toArgb())))
                 if (view.mTermSession !== session) {
                     sessionClient.terminalView = view
                     view.attachSession(session)
