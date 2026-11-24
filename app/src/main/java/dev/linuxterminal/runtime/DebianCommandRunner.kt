@@ -32,7 +32,7 @@ class DebianCommandRunner(context: Context) {
             val output = StringBuilder()
             process.inputStream.bufferedReader().useLines { lines ->
                 lines.forEach { line ->
-                    val text = line + "\\n"
+                    val text = line + "\n"
                     output.append(text)
                     onOutput(text)
                 }
