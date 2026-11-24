@@ -60,7 +60,9 @@ class ProotRuntime(context: Context) {
                 "HOME=${appFiles.absolutePath}",
                 "TERM=xterm-256color",
                 "LANG=C.UTF-8",
-                "PATH=/system/bin:/system/xbin"
+                "PATH=/system/bin:/system/xbin",
+                "LD_LIBRARY_PATH=" + File(runtimeDirectory, "lib").absolutePath,
+                "PROOT_LOADER=" + File(runtimeDirectory, "libexec/proot/loader").absolutePath
             ),
             isDebian = true
         )
