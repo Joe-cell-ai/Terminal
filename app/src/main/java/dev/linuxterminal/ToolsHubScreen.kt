@@ -62,7 +62,7 @@ fun ToolsHubScreen(
             }
         }
         when (selected) {
-            0 -> HomeScreen(accent, progressMessage, progress, installed, installing, error,
+            0 -> HomeScreen(Color.White, progressMessage, progress, installed, installing, error,
                 runtimeMessage, runtimePercent, runtimeInstalled, runtimeBusy, runtimeError,
                 onInstall, onInstallRuntime, openTerminal)
             1 -> PackageManagerScreen()
