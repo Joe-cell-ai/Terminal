@@ -170,7 +170,7 @@ class DebianInstaller(context: Context) {
                     }
                     entry.isSymbolicLink -> {
                         val link = File(entry.linkName)
-                        require(!link.isAbsolute && !entry.linkName.split('/').contains("..")) {
+                        require(!link.isAbsolute) {
                             "Unsafe symbolic link in Debian archive."
                         }
                         val resolved = target.parentFile.toPath().resolve(link.toPath()).normalize()
