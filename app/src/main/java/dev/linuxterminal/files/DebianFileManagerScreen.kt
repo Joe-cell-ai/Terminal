@@ -189,14 +189,7 @@ fun DebianFileManagerScreen() {
         }
     }
 
-    if (!File(root, "etc/debian_version").isFile) {
-        Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Debian is not installed", style = MaterialTheme.typography.headlineSmall)
-            Text("Install the Debian ARM64 environment from Home before browsing its files.",
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = .7f))
-        }
-        return
-    }
+    val debianAvailable = File(root, "etc/debian_version").isFile
 
     Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -228,6 +221,10 @@ fun DebianFileManagerScreen() {
             IconButton(onClick = { name = ""; editAction = EditAction.CREATE_FOLDER }) {
                 Icon(Icons.Default.CreateNewFolder, contentDescription = "New folder")
             }
+        }
+        if (!debianAvailable && externalCurrent == null) {
+            Text("Terminal Data becomes available after Debian is installed. Phone and USB storage can still be opened here.",
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = .7f), fontSize = 12.sp)
         }
         Text(message, color = MaterialTheme.colorScheme.onBackground.copy(alpha = .65f), fontSize = 12.sp)
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
