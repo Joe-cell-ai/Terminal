@@ -60,6 +60,7 @@ fun DebianFileManagerScreen() {
     var current by remember { mutableStateOf(home) }
     var entries by remember { mutableStateOf<List<Entry>>(emptyList()) }
     var message by remember { mutableStateOf("Debian home directory") }
+    var exportSource by remember { mutableStateOf<File?>(null) }
     val scope = rememberCoroutineScope()
 
     fun refresh() {
@@ -98,7 +99,6 @@ fun DebianFileManagerScreen() {
     }
 
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri: Uri? ->
-        val selected = current
         // The export action is bound to the file selected immediately before the picker opens.
         val source = exportSource
         if (uri != null && source != null) scope.launch {
@@ -111,6 +111,14 @@ fun DebianFileManagerScreen() {
                 }.getOrElse { "Export failed: ${it.message}" }
             }
         }
+    }
+
+    if (!File(root, "etc/debian_version").isFile) {
+        Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Debian is not installed", style = MaterialTheme.typography.headlineSmall)
+            Text("Install the Debian ARM64 environment from Home before browsing its files.", color = MaterialTheme.colorScheme.onBackground.copy(alpha = .7f))
+        }
+        return
     }
 
     Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
