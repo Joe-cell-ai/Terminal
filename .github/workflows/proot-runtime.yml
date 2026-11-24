@@ -72,7 +72,7 @@ jobs:
             printf '%s\n' "License: GPL-2.0 (PRoot); dependencies retain their upstream licenses."
           } > dist/proot-runtime/BUILD-INFO.txt
           sha256sum dist/proot-runtime/proot > dist/proot-runtime/SHA256SUMS
-          tar -C dist -czf proot-runtime-aarch64.tar.gz proot-runtime
+          tar -C dist -czf dist/proot-runtime-aarch64.tar.gz proot-runtime
           sha256sum dist/proot-runtime-aarch64.tar.gz > dist/proot-runtime-aarch64.tar.gz.sha256
           tar -tzf dist/proot-runtime-aarch64.tar.gz
 
