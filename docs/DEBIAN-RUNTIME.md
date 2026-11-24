@@ -38,3 +38,19 @@ explicitly labelled Android host-shell fallback.
 or its installer. No binary is accepted from an unverified mirror. A reproducible,
 license-compliant ARM64 PRoot build/package and its integrity verification are
 still required before Debian Bash can start on a device.
+
+
+## Reproducible ARM64 PRoot build
+
+The workflow `.github/workflows/proot-runtime.yml` builds the official Termux
+PRoot package for AArch64 from a pinned `termux/termux-packages` commit
+(`8d52c3057bb01e89a1fb4ed0592b7602dce38731`). It uses the upstream package
+recipe (PRoot GPL-2.0) and its declared `libandroid-shmem` and `libtalloc`
+dependencies, then assembles an ARM64 runtime archive with the PRoot loader,
+shared libraries, build provenance and SHA-256 checksums.
+
+The workflow fails closed if the PRoot executable, unbundled loader, or either
+required shared library is missing, or if the executable is not identified as
+ARM64. The archive is a CI artifact for validation; it is not yet automatically
+downloaded or installed by the Android app. Device testing and the runtime
+installer remain required before enabling APT.
