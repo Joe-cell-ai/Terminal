@@ -85,7 +85,7 @@ class DebianInstaller(context: Context) {
 
     private fun latestImagePath(): String {
         val html = readText(URL(baseIndex))
-        val candidates = Regex("href=\"(\\d{8}_\\d{2}:\\d{2}/)\"")
+        val candidates = Regex("href=\"(\\d{8}_\\d{2}(?::|%3A)\\d{2}/)\"")
             .findAll(html).map { it.groupValues[1] }.toList()
         return candidates.maxOrNull() ?: error("Could not find a Debian image build on the image server.")
     }
