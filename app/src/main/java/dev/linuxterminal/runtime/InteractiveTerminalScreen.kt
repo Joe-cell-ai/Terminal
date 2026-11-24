@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.weight
 import androidx.compose.material3.Button
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.getValue
@@ -53,7 +52,6 @@ private class AppSessionClient(private val context: Context) : TerminalSessionCl
     override fun onBell(session: TerminalSession) {}
     override fun onColorsChanged(session: TerminalSession) { terminalView?.invalidate() }
     override fun onTerminalCursorStateChange(state: Boolean) {}
-    override fun setTerminalShellPid(session: TerminalSession, pid: Int) {}
     override fun getTerminalCursorStyle(): Int? = null
     override fun logError(tag: String, message: String) { Log.e(tag, message) }
     override fun logWarn(tag: String, message: String) { Log.w(tag, message) }
@@ -131,7 +129,7 @@ fun InteractiveTerminalScreen() {
         AndroidView(
             modifier = Modifier.weight(1f).fillMaxSize(),
             factory = { viewContext ->
-                TerminalView(viewContext).apply {
+                TerminalView(viewContext, null).apply {
                     setTerminalViewClient(viewClient)
                     setTextSize(14)
                     setTypeface(Typeface.MONOSPACE)
