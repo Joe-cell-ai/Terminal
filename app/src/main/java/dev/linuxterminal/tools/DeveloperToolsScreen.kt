@@ -34,7 +34,18 @@ private val tools = listOf(
     Tool("Nano", "nano", "Beginner-friendly terminal text editor", "apt install nano"),
     Tool("Vim", "vim", "Modal terminal text editor", "apt install vim"),
     Tool("C/C++ build tools", "build-essential", "Compiler, linker and standard build tools", "apt install build-essential"),
-    Tool("Curl", "curl", "HTTP requests and API testing", "apt install curl")
+    Tool("Curl", "curl", "HTTP requests and API testing", "apt install curl"),
+    Tool("Wget", "wget", "Download files from HTTP and FTP sources", "apt install wget"),
+    Tool("System monitor", "htop", "Interactive process and resource monitor", "apt install htop"),
+    Tool("Directory tree", "tree", "Display folders and files as a tree", "apt install tree"),
+    Tool("ZIP utilities", "zip unzip", "Create and extract ZIP archives", "apt install zip unzip"),
+    Tool("JSON processor", "jq", "Parse and format JSON from the command line", "apt install jq"),
+    Tool("Fast text search", "ripgrep", "Search source code and text files quickly", "apt install ripgrep"),
+    Tool("Terminal multiplexer", "tmux", "Keep terminal workspaces running in sessions", "apt install tmux"),
+    Tool("Build system", "make cmake pkg-config", "Configure and build native projects", "apt install make cmake pkg-config"),
+    Tool("SQLite", "sqlite3", "Inspect and query local SQLite databases", "apt install sqlite3"),
+    Tool("File sync", "rsync", "Synchronize folders and project files", "apt install rsync"),
+    Tool("Network diagnostics", "dnsutils iproute2", "DNS lookup and network inspection tools", "apt install dnsutils iproute2")
 )
 
 @Composable
