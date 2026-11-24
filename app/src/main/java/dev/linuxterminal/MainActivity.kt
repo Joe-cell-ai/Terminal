@@ -136,7 +136,7 @@ private fun TerminalApp() {
                                 }
                             }) { Text("+") }
                         }
-                        InteractiveTerminalScreen(fontSize = fontSize, scrollback = scrollback, sessionKey = selectedSession)
+                        InteractiveTerminalScreen(fontSize = fontSize, scrollback = scrollback, sessionKey = selectedSession, startupCommand = startupCommand)
                     }
                     Destination.Files -> DebianFileManagerScreen()
                     Destination.Packages -> PackageManagerScreen()
