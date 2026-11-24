@@ -56,7 +56,7 @@ private fun TerminalApp() {
     val context = LocalContext.current
     val preferences = remember { context.getSharedPreferences("terminal_preferences", Context.MODE_PRIVATE) }
     var classic by remember { mutableStateOf(preferences.getBoolean("classic_theme", true)) }
-    var fontSize by remember { mutableFloatStateOf(preferences.getFloat("font_size", 14f)) }
+    var fontSize by remember { mutableFloatStateOf(preferences.getFloat("font_size", 18f)) }
     var scrollback by remember { mutableIntStateOf(preferences.getInt("scrollback", 2000)) }
     var startupCommand by remember { mutableStateOf(preferences.getString("startup_command", "") ?: "") }
     var sessionCount by rememberSaveable { mutableIntStateOf(1) }
@@ -323,7 +323,7 @@ private fun SettingsScreen(
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Terminal font", fontWeight = FontWeight.SemiBold)
                 Text("Terminal text size · ${fontSize.toInt()} sp", color = MaterialTheme.colorScheme.primary)
-                Slider(value = fontSize, onValueChange = onFontSizeChange, valueRange = 10f..24f, steps = 13)
+                Slider(value = fontSize, onValueChange = onFontSizeChange, valueRange = 14f..32f, steps = 17)
                 Text("Scrollback · $scrollback lines", color = MaterialTheme.colorScheme.primary)
                 Slider(value = scrollback.toFloat(), onValueChange = { onScrollbackChange(it.toInt()) }, valueRange = 500f..10000f, steps = 18)
                 Text("Uses the system monospace font until Fira Code is bundled.", color = Muted, fontSize = 12.sp)
