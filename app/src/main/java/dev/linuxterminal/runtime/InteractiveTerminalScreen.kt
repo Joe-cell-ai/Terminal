@@ -93,18 +93,18 @@ private class AppViewClient : TerminalViewClient {
  * unprivileged Android host shell, not Debian.
  */
 @Composable
-fun InteractiveTerminalScreen() {
+fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, sessionKey: Int = 0) {
     val context = LocalContext.current
     val sessionClient = remember(context) { AppSessionClient(context) }
     val viewClient = remember { AppViewClient() }
-    val session = remember(context) {
+    val session = remember(context, sessionKey, scrollback) {
         val home = context.filesDir.absolutePath
         TerminalSession(
             "/system/bin/sh",
             home,
             arrayOf("-i"),
             arrayOf("HOME=$home", "TERM=xterm-256color", "PATH=/system/bin:/system/xbin", "LANG=C.UTF-8"),
-            2000,
+            scrollback,
             sessionClient
         )
     }
@@ -131,7 +131,7 @@ fun InteractiveTerminalScreen() {
             factory = { viewContext ->
                 TerminalView(viewContext, null).apply {
                     setTerminalViewClient(viewClient)
-                    setTextSize(14)
+                    setTextSize(fontSize.toInt())
                     setTypeface(Typeface.MONOSPACE)
                     setTerminalCursorBlinkerRate(600)
                     sessionClient.terminalView = this
