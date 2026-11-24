@@ -4,7 +4,7 @@ A lightweight Android terminal app targeting a Debian ARM64 userspace through PR
 
 ## Current development status
 
-**Batch 1 — app foundation and Classic UI** is being built on `main`.
+**Batches 1–4 are in progress on `main`.** The package manager screen now includes a searchable developer package catalogue and validated APT command construction. Actual APT execution is gated until the Debian PRoot runtime is connected.
 
 - Jetpack Compose Android app foundation
 - Home, Terminal, Files, Packages, and Settings navigation
@@ -12,7 +12,7 @@ A lightweight Android terminal app targeting a Debian ARM64 userspace through PR
 - Debian environment status clearly shown as not installed
 - Debian root filesystem is planned as a separate download to keep the APK small
 
-Batch 2 adds an optional Debian Bookworm ARM64 rootfs download with SHA-256 verification and app-private extraction. The terminal still does not execute shell commands: the PRoot launcher and real PTY-backed interactive shell are not connected yet.
+Batch 2 adds an optional Debian Bookworm ARM64 rootfs download with SHA-256 verification and app-private extraction. The terminal currently runs the Android host shell; Debian PRoot execution remains pending. Batch 4's UI and safe command builder are ready, but package operations are not yet executable.
 
 ## Build
 
