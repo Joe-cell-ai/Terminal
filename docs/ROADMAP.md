@@ -16,10 +16,11 @@
 - [ ] PRoot executable/bootstrap and first shell launch (runtime execution batch)
 
 ## Batch 3 — real terminal
-- [ ] PTY-backed shell process and interactive input
-- [ ] ANSI colors, cursor control, resize, signals, scrollback
+- [x] PTY-backed interactive session integrated with the Termux terminal engine
+- [x] ANSI parsing, cursor handling, terminal resize and scrollback provided by the terminal engine
+- [ ] Connect PTY session to Debian through a verified Android ARM64 PRoot runtime (current session is explicitly labelled Android host shell)
 - [ ] Fira Code font asset and ligature-enabled rendering
-- [ ] Keyboard row and terminal input ergonomics
+- [ ] Dedicated extra-key row and terminal input ergonomics
 
 ## Batch 4 — packages and utilities
 - [ ] APT update/install/remove flows
