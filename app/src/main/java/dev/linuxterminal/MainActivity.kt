@@ -22,6 +22,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import android.content.Context
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.linuxterminal.runtime.DebianInstallViewModel
 import dev.linuxterminal.runtime.InteractiveTerminalScreen
@@ -48,7 +50,13 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun TerminalApp() {
     var selected by remember { mutableStateOf(Destination.Home) }
-    var classic by remember { mutableStateOf(true) }
+    val context = LocalContext.current
+    val preferences = remember { context.getSharedPreferences("terminal_preferences", Context.MODE_PRIVATE) }
+    var classic by remember { mutableStateOf(preferences.getBoolean("classic_theme", true)) }
+    var fontSize by remember { mutableFloatStateOf(preferences.getFloat("font_size", 14f)) }
+    var scrollback by remember { mutableIntStateOf(preferences.getInt("scrollback", 2000)) }
+    var sessionCount by remember { mutableIntStateOf(1) }
+    var selectedSession by remember { mutableIntStateOf(0) }
     val installViewModel: DebianInstallViewModel = viewModel()
     val installProgress by installViewModel.progress.collectAsState()
     val installing by installViewModel.busy.collectAsState()
@@ -100,11 +108,44 @@ private fun TerminalApp() {
                         onInstall = { installViewModel.install() },
                         openTerminal = { selected = Destination.Terminal }
                     )
-                    Destination.Terminal -> InteractiveTerminalScreen()
+                    Destination.Terminal -> Column(Modifier.fillMaxSize()) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            repeat(sessionCount) { index ->
+                                FilterChip(
+                                    selected = selectedSession == index,
+                                    onClick = { selectedSession = index },
+                                    label = { Text("Session ${index + 1}") }
+                                )
+                            }
+                            TextButton(onClick = {
+                                if (sessionCount < 4) {
+                                    sessionCount += 1
+                                    selectedSession = sessionCount - 1
+                                }
+                            }) { Text("+") }
+                        }
+                        InteractiveTerminalScreen(fontSize = fontSize, scrollback = scrollback, sessionKey = selectedSession)
+                    }
                     Destination.Files -> DebianFileManagerScreen()
                     Destination.Packages -> PackageManagerScreen()
                     Destination.Tools -> DeveloperToolsScreen()
-                    Destination.Settings -> SettingsScreen(classic, { classic = it })
+                    Destination.Settings -> SettingsScreen(
+                        classic = classic,
+                        onThemeChange = {
+                            classic = it
+                            preferences.edit().putBoolean("classic_theme", it).apply()
+                        },
+                        fontSize = fontSize,
+                        onFontSizeChange = {
+                            fontSize = it
+                            preferences.edit().putFloat("font_size", it).apply()
+                        },
+                        scrollback = scrollback,
+                        onScrollbackChange = {
+                            scrollback = it
+                            preferences.edit().putInt("scrollback", it).apply()
+                        }
+                    )
                 }
             }
         }
@@ -207,7 +248,14 @@ private fun PlaceholderScreen(title: String, description: String) {
 }
 
 @Composable
-private fun SettingsScreen(classic: Boolean, onThemeChange: (Boolean) -> Unit) {
+private fun SettingsScreen(
+    classic: Boolean,
+    onThemeChange: (Boolean) -> Unit,
+    fontSize: Float,
+    onFontSizeChange: (Float) -> Unit,
+    scrollback: Int,
+    onScrollbackChange: (Int) -> Unit
+) {
     Column(Modifier.fillMaxSize().padding(22.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         Text("Settings", fontSize = 27.sp, fontWeight = FontWeight.Bold)
         Card(colors = CardDefaults.cardColors(containerColor = Panel)) {
@@ -225,8 +273,11 @@ private fun SettingsScreen(classic: Boolean, onThemeChange: (Boolean) -> Unit) {
         Card(colors = CardDefaults.cardColors(containerColor = Panel)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Terminal font", fontWeight = FontWeight.SemiBold)
-                Text("Fira Code (selected)", color = MaterialTheme.colorScheme.primary)
-                Text("The bundled font and ligature rendering will be connected with the PTY terminal renderer in Batch 3.", color = Muted, fontSize = 12.sp)
+                Text("Terminal text size · ${fontSize.toInt()} sp", color = MaterialTheme.colorScheme.primary)
+                Slider(value = fontSize, onValueChange = onFontSizeChange, valueRange = 10f..24f, steps = 13)
+                Text("Scrollback · $scrollback lines", color = MaterialTheme.colorScheme.primary)
+                Slider(value = scrollback.toFloat(), onValueChange = { onScrollbackChange(it.toInt()) }, valueRange = 500f..10000f, steps = 18)
+                Text("Uses the system monospace font until Fira Code is bundled.", color = Muted, fontSize = 12.sp)
             }
         }
         Text("Runtime", fontWeight = FontWeight.SemiBold)
