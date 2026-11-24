@@ -13,44 +13,44 @@
 - [x] SHA-256 verification against the image's published checksum
 - [x] Path-checked extraction into app-private storage
 - [x] Free-storage preflight and installed-state restoration
-- [ ] PRoot executable/bootstrap and first shell launch (runtime execution batch)
+- [x] PRoot ARM64 runtime installer with checksum verification, guarded extraction and atomic activation\n- [ ] End-to-end first Debian Bash launch on physical ARM64 device
 
 ## Batch 3 — real terminal
 - [x] PTY-backed interactive session integrated with the Termux terminal engine
 - [x] ANSI parsing, cursor handling, terminal resize and scrollback provided by the terminal engine
-- [ ] Connect PTY session to Debian through a verified Android ARM64 PRoot runtime (current session is explicitly labelled Android host shell)
+- [x] PTY launch wired to the installed ARM64 PRoot runtime with honest host-shell fallback\n- [ ] Confirm interactive Debian Bash on physical ARM64 device
 - [ ] Fira Code font asset and ligature-enabled rendering
 - [ ] Dedicated extra-key row and terminal input ergonomics
 
 ## Batch 4 — packages and utilities
 - [x] Package manager screen with searchable developer package catalogue
 - [x] Safe APT argument builder with package-name validation (no shell interpolation)
-- [ ] Execute APT update/install/remove/upgrade inside Debian PRoot
-- [ ] Stream package output, progress, cancellation and error handling
+- [x] Execute APT update/upgrade/install/remove through PRoot with argument validation
+- [x] Stream command output and show operation progress/error state (cancellation remains pending)
 
 ## Batch 5 — files
 - [x] Debian home/rootfs file browser with directory navigation and metadata
 - [x] Android Storage Access Framework import/export without broad storage permission
 - [x] File create/rename/delete with path validation and delete confirmation
-- [ ] Bounded text preview/edit support
+- [x] Bounded UTF-8 text preview/edit for supported text files (512 KiB limit)
 
 ## Batch 6 — developer tools
 - [x] Optional Python, Git, Node.js, SSH, Nano, Vim and build-essential catalogue
 - [x] Debian APT install command guidance for each tool
-- [ ] One-tap installation and package-state detection after PRoot/APT execution is available
+- [x] One-tap developer package installation through Debian APT\n- [ ] Installed package-state detection
 
 ## Batch 7 — sessions and customization
 - [x] Up to four independent in-memory PTY sessions while the Terminal screen remains open
-- [ ] Keep sessions alive across navigation/process recreation and add session rename
+- [ ] Keep PTY sessions alive across navigation/process recreation and add session rename
 - [x] Persist Classic/Premium theme selection
 - [x] Persist terminal font size and scrollback preferences
 
 ## Batch 8 — reliability and security
 - [x] Preserve coroutine cancellation and clean incomplete Debian staging on failure
 - [x] Debian install storage preflight and app-private rootfs storage
-- [ ] Persistent background install recovery and process/session cleanup
+- [ ] Persistent background install recovery and explicit process/session lifecycle recovery
 - [x] Reject absolute/traversal paths, duplicate entries, hard links and special archive entries; cap archive entries and expanded size
-- [ ] PRoot runtime isolation review and device permission audit
+- [ ] Complete PRoot isolation review and physical-device permission audit
 
 ## Batch 9 — release readiness
 - [ ] Unit/instrumentation tests and ARM64 device testing
