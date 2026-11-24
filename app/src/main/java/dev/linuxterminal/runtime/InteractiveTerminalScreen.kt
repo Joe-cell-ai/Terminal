@@ -3,6 +3,7 @@ package dev.linuxterminal.runtime
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.view.inputmethod.InputMethodManager
 import android.graphics.Typeface
 import android.util.Log
 import android.view.KeyEvent
@@ -163,6 +164,8 @@ fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, ses
             factory = { viewContext ->
                 TerminalView(viewContext, null).apply {
                     setTerminalViewClient(viewClient)
+                    isFocusable = true
+                    isFocusableInTouchMode = true
                     setTextSize(fontSize.toInt())
                     setTypeface(Typeface.MONOSPACE)
                     setTerminalCursorBlinkerRate(600)
@@ -172,6 +175,7 @@ fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, ses
                 }
             },
             update = { view ->
+                view.setTextSize(fontSize.toInt())
                 if (view.mTermSession !== session) {
                     sessionClient.terminalView = view
                     view.attachSession(session)
@@ -179,6 +183,16 @@ fun InteractiveTerminalScreen(fontSize: Float = 14f, scrollback: Int = 2000, ses
             }
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)) {
+            Button(onClick = {
+                sessionClient.terminalView?.let { terminalView ->
+                    terminalView.isFocusableInTouchMode = true
+                    terminalView.requestFocus()
+                    terminalView.post {
+                        (context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
+                            .showSoftInput(terminalView, InputMethodManager.SHOW_IMPLICIT)
+                    }
+                }
+            }, modifier = Modifier.weight(1.3f)) { Text("Keyboard", fontSize = 10.sp, maxLines = 1) }
             listOf("ESC" to "\u001b", "TAB" to "\t", "CTRL+C" to "\u0003", "CTRL+D" to "\u0004", "↑" to "\u001b[A", "↓" to "\u001b[B", "←" to "\u001b[D", "→" to "\u001b[C").forEach { (label, value) ->
                 TextButton(onClick = { sendKey(value) }, modifier = Modifier.weight(1f)) { Text(label, fontSize = 10.sp, maxLines = 1) }
             }
