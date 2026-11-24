@@ -160,6 +160,7 @@ private fun TerminalApp() {
                     Destination.Files -> DebianFileManagerScreen()
                     Destination.Packages -> PackageManagerScreen()
                     Destination.Tools -> DeveloperToolsScreen()
+                    Destination.Extras -> TerminalExtrasScreen()
                     Destination.Settings -> SettingsScreen(
                         classic = classic,
                         onThemeChange = {
