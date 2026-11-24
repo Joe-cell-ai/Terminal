@@ -23,8 +23,10 @@
 - [ ] Dedicated extra-key row and terminal input ergonomics
 
 ## Batch 4 — packages and utilities
-- [ ] APT update/install/remove flows
-- [ ] Package output and error handling
+- [x] Package manager screen with searchable developer package catalogue
+- [x] Safe APT argument builder with package-name validation (no shell interpolation)
+- [ ] Execute APT update/install/remove/upgrade inside Debian PRoot
+- [ ] Stream package output, progress, cancellation and error handling
 
 ## Batch 5 — files
 - [ ] Debian home file browser
