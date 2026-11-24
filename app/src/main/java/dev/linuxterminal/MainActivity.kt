@@ -103,6 +103,14 @@ private fun TerminalApp() {
             }
         ) { padding ->
             Box(Modifier.fillMaxSize().padding(padding)) {
+                InteractiveTerminalScreen(
+                    fontSize = fontSize,
+                    scrollback = scrollback,
+                    sessionKey = selectedSession,
+                    startupCommand = startupCommand,
+                    modifier = if (selected == Destination.Terminal) Modifier.fillMaxSize()
+                        else Modifier.size(1.dp).offset(x = 2000.dp)
+                )
                 when (selected) {
                     Destination.Home -> HomeScreen(
                         accent = accent,
@@ -136,7 +144,6 @@ private fun TerminalApp() {
                                 }
                             }) { Text("+") }
                         }
-                        InteractiveTerminalScreen(fontSize = fontSize, scrollback = scrollback, sessionKey = selectedSession, startupCommand = startupCommand)
                     }
                     Destination.Files -> DebianFileManagerScreen()
                     Destination.Packages -> PackageManagerScreen()
